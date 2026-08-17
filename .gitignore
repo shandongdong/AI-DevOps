@@ -19,6 +19,7 @@ target/
 .settings
 .springBeans
 .DS_Store
+.vscode
 
 ### IntelliJ IDEA ###
 .idea
