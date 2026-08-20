@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高保真交互原型 - 用户管理 - 表单</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div class="app-container">
+      <!-- 面包屑导航（首页 · 用户列表 可点击） -->
+      <div class="breadcrumb-area">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item><a href="index.html">首页</a></el-breadcrumb-item>
+          <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+          <el-breadcrumb-item><a href="index.html">用户列表</a></el-breadcrumb-item>
+          <el-breadcrumb-item>用户列表表单</el-breadcrumb-item>
+        </el-breadcrumb>
+      </div>
+
+      <div class="form-container">
+        <el-card class="form-card" v-loading="formLoading">
+          <div slot="header" class="clearfix">
+            <span style="font-size:16px;font-weight:bold;color:#303133;">{{ pageTitle }}</span>
+          </div>
+          <el-form ref="basicForm" :model="form" :rules="rules" label-width="120px" size="medium">
+            <!-- Tab 分组：基本信息 / 详细信息 -->
+            <el-tabs v-model="activeTab" class="form-tabs">
+              <el-tab-pane label="基本信息" name="basic">
+                <el-row :gutter="24">
+                  <el-col :span="12" v-for="field in basicTabFields" :key="field.prop">
+                    <el-form-item
+                      :prop="field.prop"
+                      :rules="field.required ? [{required: true, message: field.label + '不能为空', trigger: field.type === 'select' || field.type === 'multiselect' || field.type === 'date' ? 'change' : 'blur'}] : []">
+                      <template slot="label">
+                        <span>{{ field.label }}</span>
+                        <el-tooltip v-if="field.help" :content="field.help" placement="top">
+                          <i class="el-icon-info help-icon" @click="openHelp(field.prop)"></i>
+                        </el-tooltip>
+                      </template>
+
+                      <component
+                        :is="'form-field-' + (field.type === 'readonly' ? 'readonly' : field.type)"
+                        :field="field"
+                        :form="form"
+                        :parent-disabled="isFieldDisabled(field)"
+                        :parent-placeholder="resolvePlaceholder(field)"
+                        @dept-change="handleDeptChange"></component>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-tab-pane>
+
+              <el-tab-pane label="详细信息" name="detail">
+                <el-row :gutter="24">
+                  <el-col :span="12" v-for="field in detailTabFields" :key="field.prop">
+                    <el-form-item
+                      :prop="field.prop"
+                      :rules="field.required ? [{required: true, message: field.label + '不能为空', trigger: field.type === 'select' || field.type === 'multiselect' || field.type === 'date' ? 'change' : 'blur'}] : []">
+                      <template slot="label">
+                        <span>{{ field.label }}</span>
+                        <el-tooltip v-if="field.help" :content="field.help" placement="top">
+                          <i class="el-icon-info help-icon" @click="openHelp(field.prop)"></i>
+                        </el-tooltip>
+                      </template>
+
+                      <component
+                        :is="'form-field-' + (field.type === 'readonly' ? 'readonly' : field.type)"
+                        :field="field"
+                        :form="form"
+                        :parent-disabled="isFieldDisabled(field)"
+                        :parent-placeholder="resolvePlaceholder(field)"
+                        @dept-change="handleDeptChange"></component>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-tab-pane>
+            </el-tabs>
+          </el-form>
+        </el-card>
+
+        <!-- 底部操作栏：保存（primary）在左，关闭在右 -->
+        <div class="bottom-bar">
+          <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
+          <el-button @click="handleClose">关闭</el-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    /* ------------------------------------------------------------------
+     * 字段渲染子组件：把不同 type 的渲染逻辑解耦，便于级联交互复用
+     * ------------------------------------------------------------------ */
+    Vue.component('form-field-readonly', {
+      props: ['field', 'form'],
+      template: '\
+        <div class="auto-field">\
+          <el-input :value="form[field.prop]" :placeholder="field.placeholder" disabled\
+            @input="$set(form, field.prop, $event)"></el-input>\
+          <el-tag size="mini" type="info" effect="plain" class="auto-tag">{{ field.autoTag || \'系统自动生成\' }}</el-tag>\
+        </div>'
+    });
+
+    Vue.component('form-field-input', {
+      props: ['field', 'form'],
+      template: '\
+        <el-input :value="form[field.prop]" @input="$set(form, field.prop, $event)"\
+          :placeholder="field.placeholder"\
+          :maxlength="field.maxlength || 50"\
+          show-word-limit clearable></el-input>'
+    });
+
+    Vue.component('form-field-select', {
+      props: ['field', 'form', 'parentDisabled', 'parentPlaceholder'],
+      template: '\
+        <el-select :value="form[field.prop]" @change="onChange"\
+          :placeholder="parentPlaceholder"\
+          :disabled="parentDisabled"\
+          clearable filterable style="width:100%">\
+          <el-option v-for="opt in field.options" :key="opt.value" :label="opt.label" :value="opt.value"></el-option>\
+        </el-select>',
+      methods: {
+        onChange: function (val) {
+          this.$set(this.form, this.field.prop, val);
+          if (this.field.prop === 'deptId') this.$emit('dept-change');
+        }
+      }
+    });
+
+    Vue.component('form-field-multiselect', {
+      props: ['field', 'form', 'parentDisabled', 'parentPlaceholder'],
+      template: '\
+        <el-select :value="form[field.prop]" @change="onChange"\
+          :placeholder="parentPlaceholder"\
+          :disabled="parentDisabled"\
+          multiple collapse-tags clearable filterable style="width:100%">\
+          <el-option v-for="opt in field.options" :key="opt.value" :label="opt.label" :value="opt.value"></el-option>\
+        </el-select>',
+      methods: {
+        onChange: function (val) { this.$set(this.form, this.field.prop, val); }
+      }
+    });
+
+    Vue.component('form-field-date', {
+      props: ['field', 'form'],
+      template: '\
+        <el-date-picker :value="form[field.prop]" @input="$set(form, field.prop, $event)"\
+          type="date" :placeholder="field.placeholder"\
+          value-format="yyyy-MM-dd" style="width:100%"></el-date-picker>'
+    });
+
+    Vue.component('form-field-switch', {
+      props: ['field', 'form'],
+      template: '\
+        <el-switch :value="form[field.prop]" @change="$set(form, field.prop, $event)"\
+          active-color="#13ce66" inactive-color="#dcdfe6"\
+          active-text="启用" inactive-text="停用"></el-switch>'
+    });
+
+    /* ------------------------------------------------------------------
+     * 工具方法
+     * ------------------------------------------------------------------ */
+    function getUrlParams() {
+      var params = {};
+      var search = window.location.search.substring(1);
+      if (search) {
+        search.split('&').forEach(function (pair) {
+          var parts = pair.split('=');
+          params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1] || '');
+        });
+      }
+      return params;
+    }
+
+    var urlParams = getUrlParams();
+
+    // Tab 分组定义：基本身份信息 vs. 组织/扩展信息
+    var BASIC_TAB_PROPS = ['userCode', 'name', 'phone', 'email', 'gender', 'status'];
+    var DETAIL_TAB_PROPS = ['deptId', 'roles', 'birthDate', 'entryDate', 'enabled', 'createTime'];
+
+    function buildInitialForm(mode) {
+      var form = {};
+      basicFields.forEach(function (f) {
+        if (f.type === 'multiselect') form[f.prop] = [];
+        else if (f.type === 'switch') form[f.prop] = true;
+        else form[f.prop] = '';
+      });
+      // 系统自动生成字段
+      if (mode === 'add') {
+        form.userCode = '（保存后自动生成）';
+        form.createTime = '（保存后自动填充）';
+      } else {
+        // 模拟编辑回显
+        form.userCode = 'TECH-0001';
+        form.name = '张三';
+        form.phone = '13800001234';
+        form.email = 'zhangsan@example.com';
+        form.gender = 'M';
+        form.deptId = 'TECH';
+        form.roles = ['admin', 'user'];
+        form.status = '0';
+        form.birthDate = '1992-08-15';
+        form.entryDate = '2020-03-01';
+        form.enabled = true;
+        form.createTime = '2020-03-01 09:12:30';
+      }
+      return form;
+    }
+
+    new Vue({
+      el: '#app',
+      data: function () {
+        var mode = urlParams.mode || 'add';
+        return {
+          mode: mode,
+          activeTab: 'basic',
+          formLoading: false,
+          submitLoading: false,
+          form: buildInitialForm(mode),
+          basicFields: basicFields,
+          rules: {
+            name: [{ required: true, message: '姓名不能为空', trigger: 'blur' }],
+            phone: [
+              { required: true, message: '手机号不能为空', trigger: 'blur' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+            ],
+            email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
+            gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
+            deptId: [{ required: true, message: '请选择部门', trigger: 'change' }],
+            roles: [{ type: 'array', required: true, message: '请至少选择一个角色', trigger: 'change' }],
+            status: [{ required: true, message: '请选择状态', trigger: 'change' }],
+            entryDate: [{ required: true, message: '请选择入职日期', trigger: 'change' }]
+          }
+        };
+      },
+      computed: {
+        pageTitle: function () {
+          var titles = { add: '新增用户', edit: '修改用户', copy: '复制用户' };
+          return titles[this.mode] || '用户表单';
+        },
+        basicTabFields: function () {
+          return basicFields.filter(function (f) { return BASIC_TAB_PROPS.indexOf(f.prop) !== -1; });
+        },
+        detailTabFields: function () {
+          return basicFields.filter(function (f) { return DETAIL_TAB_PROPS.indexOf(f.prop) !== -1; });
+        },
+        // 通过 prop 快速查找字段定义（用于解析父级标签）
+        fieldMap: function () {
+          var map = {};
+          basicFields.forEach(function (f) { map[f.prop] = f; });
+          return map;
+        }
+      },
+      methods: {
+        openHelp: function (topic) { openHelpPage(topic); },
+        // 父子级联：当字段定义了 dependsOn，且父级未选择时禁用
+        isFieldDisabled: function (field) {
+          if (!field.dependsOn) return false;
+          var parentVal = this.form[field.dependsOn];
+          if (parentVal === null || parentVal === undefined || parentVal === '') return true;
+          if (Array.isArray(parentVal) && parentVal.length === 0) return true;
+          return false;
+        },
+        // 父子级联：动态 placeholder
+        resolvePlaceholder: function (field) {
+          if (field.dependsOn && this.isFieldDisabled(field)) {
+            var parentField = this.fieldMap[field.dependsOn];
+            var parentLabel = parentField ? parentField.label : field.dependsOn;
+            return '请先选择【' + parentLabel + '】';
+          }
+          return '请选择';
+        },
+        handleDeptChange: function () {
+          // 部门变更 → 清空依赖该部门的子级字段（角色），并刷新自动编号预览
+          var self = this;
+          basicFields.forEach(function (f) {
+            if (f.dependsOn === 'deptId') {
+              self.form[f.prop] = (f.type === 'multiselect') ? [] : '';
+            }
+          });
+          if (this.mode === 'add' && this.form.deptId) {
+            this.form.userCode = '（保存后基于「' + this.form.deptId + '」自动生成）';
+          }
+        },
+        handleClose: function () {
+          window.location.href = 'index.html';
+        },
+        handleSubmit: function () {
+          var self = this;
+          this.$refs.basicForm.validate(function (valid) {
+            if (!valid) {
+              self.$message.error('请检查并完善标红字段');
+              return;
+            }
+            self.submitLoading = true;
+            setTimeout(function () {
+              self.submitLoading = false;
+              self.$message.success('保存成功');
+              if (self.mode === 'add') {
+                var deptCode = self.form.deptId || 'AUTO';
+                self.form.userCode = deptCode + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+                var now = new Date();
+                self.form.createTime = now.getFullYear() + '-' +
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0') + ' ' +
+                  String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0') + ':' +
+                  String(now.getSeconds()).padStart(2, '0');
+              }
+            }, 1000);
+          });
+        }
+      },
+      mounted: function () {
+        if (this.mode !== 'add') {
+          this.formLoading = true;
+          var self = this;
+          setTimeout(function () { self.formLoading = false; }, 600);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+/* ========================================
+   高保真交互原型 - 标准CRUD管理页 样式
+   ======================================== */
+
+/* 全局设置 */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 14px;
+  color: #303133;
+  background: #ffffff;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* 主内容区 */
+.app-container {
+  padding: 16px;
+}
+
+/* 搜索筛选区 */
+.search-area {
+  background: #fff;
+  padding: 18px 20px 0;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .06);
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.search-area .el-form-item {
+  margin-bottom: 18px;
+}
+
+/* 工具栏 */
+.toolbar {
+  margin-bottom: 12px;
+}
+
+.toolbar .left-buttons .el-button {
+  margin-right: 8px;
+}
+
+.right-toolbar {
+  float: right;
+}
+
+.right-toolbar .el-button {
+  margin-left: 8px;
+  padding: 8px;
+  font-size: 16px;
+}
+
+/* 表格容器 */
+.table-area {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .06);
+  padding: 0;
+}
+
+/* 分页 */
+.pagination-area {
+  margin-top: 16px;
+  padding: 12px 0;
+  text-align: right;
+}
+
+/* 导入对话框 */
+.import-dialog .el-upload {
+  width: 100%;
+}
+
+.import-dialog .el-upload-dragger {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 20px;
+  border-radius: 6px;
+}
+
+.import-dialog .el-upload-dragger .el-icon-upload {
+  margin: 0 0 12px !important;
+  line-height: 1;
+  font-size: 50px;
+  color: #C0C4CC;
+}
+
+.import-dialog .el-upload-dragger .el-upload__text {
+  width: 100%;
+  text-align: center;
+  color: #606266;
+}
+
+.import-dialog .upload-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.import-dialog .mode-desc {
+  font-size: 12px;
+  color: #909399;
+  margin-left: 4px;
+}
+
+.import-dialog .mode-danger {
+  color: #F56C6C;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+/* 导入结果对话框 */
+.result-dialog .summary-alert {
+  margin-bottom: 16px;
+}
+
+.result-dialog .fail-row {
+  background-color: #FEF0F0 !important;
+}
+
+/* 表单页 */
+.form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.form-card {
+  margin-bottom: 16px;
+}
+
+.form-card .el-card__body {
+  padding: 24px;
+}
+
+.bottom-bar {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 12px 24px;
+  border-top: 1px solid #EBEEF5;
+  text-align: center;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, .04);
+}
+
+/* 面包屑 */
+.breadcrumb-area {
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .06);
+}
+
+/* 面包屑可点击项：蓝色链接样式 */
+.breadcrumb-area .el-breadcrumb__item a,
+.breadcrumb-area .el-breadcrumb__inner a {
+  color: #409EFF;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.breadcrumb-area .el-breadcrumb__item a:hover,
+.breadcrumb-area .el-breadcrumb__inner a:hover {
+  color: #66B1FF;
+  text-decoration: underline;
+}
+
+/* 表单页 Tab 分组 */
+.form-tabs .el-tabs__header {
+  margin-bottom: 24px;
+}
+
+.form-tabs .el-tabs__item {
+  font-size: 14px;
+  font-weight: 500;
+  height: 44px;
+  line-height: 44px;
+}
+
+/* 详情页 */
+.detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.detail-header {
+  background: #fff;
+  padding: 24px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .06);
+}
+
+.detail-header .main-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 8px;
+}
+
+.detail-header .sub-info {
+  font-size: 14px;
+  color: #909399;
+}
+
+.detail-section {
+  background: #fff;
+  padding: 24px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .06);
+}
+
+.detail-section .section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #EBEEF5;
+}
+
+/* 详情页描述列表列宽上下对齐（参考产品型号详情页） */
+.detail-section .el-descriptions__body table {
+  table-layout: fixed !important;
+  width: 100%;
+}
+.detail-section .el-descriptions-item__label.is-bordered-label {
+  width: 10%;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+.detail-section .el-descriptions-item__content.is-bordered-content {
+  width: 23.33%;
+}
+
+/* 帮助提示图标（灰色感叹号，与产品型号页面风格一致） */
+.help-icon {
+  color: #909399;
+  font-size: 14px;
+  margin-left: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.help-icon:hover {
+  color: #606266;
+}
+
+/* 自动生成只读字段 */
+.auto-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auto-field .el-input.is-disabled .el-input__inner {
+  background-color: #F5F7FA;
+  color: #909399;
+  border-color: #E4E7ED;
+  cursor: not-allowed;
+}
+
+.auto-field .auto-tag {
+  margin-left: 8px;
+  flex-shrink: 0;
+  background: #ECF5FF;
+  border-color: #B3D8FF;
+  color: #409EFF;
+}
+
+/* 详情页字段值复制图标（hover 显示） */
+.field-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.copy-icon {
+  margin-left: 8px;
+  color: #C0C4CC;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.field-value:hover .copy-icon {
+  opacity: 1;
+}
+
+.copy-icon:hover {
+  color: #409EFF;
+}
+
+/* 操作历史 - 纯文字列表 */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.history-item {
+  padding: 10px 0;
+  border-bottom: 1px dashed #EBEEF5;
+  font-size: 14px;
+  color: #303133;
+  line-height: 1.7;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-time {
+  display: inline-block;
+  min-width: 160px;
+  color: #909399;
+  font-family: Menlo, Monaco, Consolas, monospace;
+  margin-right: 8px;
+}
+
+.history-text {
+  color: #303133;
+}
+
+.history-operator {
+  color: #409EFF;
+  font-weight: 600;
+}
+
+.history-field {
+  color: #E6A23C;
+  font-weight: 600;
+}
+
+.history-old {
+  color: #F56C6C;
+}
+
+.history-new {
+  color: #67C23A;
+  font-weight: 600;
+}
+
+/* 列配置抽屉 */
+.column-config-drawer .el-drawer__body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.column-config-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.config-tip {
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: #ECF5FF;
+  border-radius: 4px;
+  color: #409EFF;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.config-tip i {
+  margin-right: 6px;
+}
+
+.column-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.column-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: #F5F7FA;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.column-item:hover {
+  background: #E8EEF5;
+  border-color: #D9ECFF;
+}
+
+.column-item-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.drag-handle {
+  cursor: move;
+  font-size: 18px;
+  color: #909399;
+  margin-right: 10px;
+}
+
+.drag-handle:hover {
+  color: #409EFF;
+}
+
+.column-label {
+  font-size: 14px;
+  color: #303133;
+  font-weight: 500;
+}
+
+.column-item-right {
+  display: flex;
+  align-items: center;
+}
+
+.sortable-ghost {
+  opacity: 0.5;
+  background: #C8EBFB !important;
+}
+
+.sortable-chosen {
+  background: #D9ECFF !important;
+}
+
+.drawer-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #EBEEF5;
+  text-align: right;
+  background: #FAFAFA;
+}
+
+/* 选中行计数提示 */
+.selection-bar {
+  background: #ECF5FF;
+  border: 1px solid #B3D8FF;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selection-bar .count {
+  color: #409EFF;
+  font-weight: bold;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 8px;
+  }
+  .right-toolbar {
+    float: none;
+    margin-top: 8px;
+  }
+}

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高保真交互原型 - 用户管理 - 详情</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div class="app-container">
+      <!-- 面包屑导航（首页 · 用户列表 可点击） -->
+      <div class="breadcrumb-area">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item><a href="index.html">首页</a></el-breadcrumb-item>
+          <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+          <el-breadcrumb-item><a href="index.html">用户列表</a></el-breadcrumb-item>
+          <el-breadcrumb-item>用户详情</el-breadcrumb-item>
+        </el-breadcrumb>
+      </div>
+
+      <div class="detail-container" v-loading="pageLoading">
+        <!-- 顶部信息栏 -->
+        <div class="detail-header">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <span class="main-title">{{ user.name }}</span>
+              <el-tag type="success" size="small" style="margin-left:12px">{{ user.statusLabel }}</el-tag>
+              <el-tag size="small" style="margin-left:4px">{{ user.deptLabel }}</el-tag>
+            </div>
+            <div>
+              <el-button size="small" type="primary" plain icon="el-icon-back" @click="goBack">返回列表</el-button>
+            </div>
+          </div>
+          <div class="sub-info" style="margin-top:8px">
+            ID #{{ user.id }} ｜ 用户编号：{{ user.userCode }} ｜ 创建于 {{ user.createTime }}
+          </div>
+        </div>
+
+        <!-- 基本信息（默认展开） -->
+        <div class="detail-section">
+          <div class="section-title">基本信息</div>
+          <el-descriptions :column="3" border size="medium">
+            <el-descriptions-item>
+              <template slot="label">用户ID <el-tooltip content="系统唯一标识，不可修改" placement="top"><i class="el-icon-info help-icon"></i></el-tooltip></template>
+              <span class="field-value">
+                {{ user.id }}
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.id)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="用户编号">
+              <span class="field-value">
+                {{ user.userCode }}
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.userCode)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="姓名">
+              <span class="field-value">
+                {{ user.name }}
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.name)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="手机号">
+              <span class="field-value">
+                {{ user.phoneMasked }}
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.phone)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="邮箱">
+              <span class="field-value">
+                {{ user.email }}
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.email)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="性别">
+              <span class="field-value">
+                {{ user.genderLabel }}
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.genderLabel)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <span class="field-value">
+                <el-tag :type="user.statusType" size="small">{{ user.statusLabel }}</el-tag>
+                <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.statusLabel)"></i></el-tooltip>
+              </span>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <!-- 详细信息（可折叠，默认折叠） -->
+        <div class="detail-section">
+          <div class="section-title collapsible-title"
+               style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;"
+               @click="detailExpanded = !detailExpanded">
+            <span>
+              <span>详细信息</span>
+              <span style="color:#909399;font-size:13px;font-weight:normal;margin-left:8px;">6 个字段</span>
+            </span>
+            <i :class="detailExpanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"
+               style="font-size:16px;color:#909399;transition:transform 0.2s;"></i>
+          </div>
+          <el-collapse-transition>
+            <div v-show="detailExpanded" style="margin-top:12px;">
+              <el-descriptions :column="3" border size="medium">
+                <el-descriptions-item label="部门">
+                  <span class="field-value">
+                    <el-tag size="small">{{ user.deptLabel }}</el-tag>
+                    <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.deptLabel)"></i></el-tooltip>
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item label="角色">
+                  <span class="field-value">
+                    <el-tag v-for="r in user.roleLabels" :key="r" size="mini" effect="plain" style="margin-right:4px">{{ r }}</el-tag>
+                    <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.roleLabels.join('、'))"></i></el-tooltip>
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item label="出生日期">
+                  <span class="field-value">
+                    {{ user.birthDate }}
+                    <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.birthDate)"></i></el-tooltip>
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item label="入职日期">
+                  <span class="field-value">
+                    {{ user.entryDate }}
+                    <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.entryDate)"></i></el-tooltip>
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item label="是否启用">
+                  <span class="field-value">
+                    <el-tag :type="user.enabled ? 'success' : 'info'" size="small">{{ user.enabled ? '启用' : '停用' }}</el-tag>
+                    <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.enabled ? '启用' : '停用')"></i></el-tooltip>
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item label="创建时间">
+                  <span class="field-value">
+                    {{ user.createTime }}
+                    <el-tooltip content="点击复制" placement="top"><i class="el-icon-document-copy copy-icon" @click="doCopy(user.createTime)"></i></el-tooltip>
+                  </span>
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+          </el-collapse-transition>
+        </div>
+
+        <!-- 操作历史（纯文字描述，分批加载） -->
+        <div class="detail-section">
+          <div class="section-title">
+            <span>操作历史</span>
+            <span style="color:#909399;font-size:13px;font-weight:normal;margin-left:8px;">共 {{ allHistory.length }} 条</span>
+          </div>
+          <ul class="history-list">
+            <li v-for="(item, index) in displayedHistory" :key="index" class="history-item">
+              <span class="history-time">{{ item.time }}</span>
+              <span class="history-text" v-if="item.type === 'create'">
+                【<span class="history-operator">{{ item.operator }}</span>】创建了用户
+              </span>
+              <span class="history-text" v-else>
+                【<span class="history-operator">{{ item.operator }}</span>】修改了
+                【<span class="history-field">{{ item.field }}</span>】 字段值，修改之前值为
+                【<span class="history-old">{{ item.oldValue }}</span>】，修改之后值为
+                【<span class="history-new">{{ item.newValue }}</span>】
+              </span>
+            </li>
+          </ul>
+          <div style="text-align:center;margin-top:16px;padding-bottom:8px;">
+            <el-button v-if="hasMoreHistory" type="text" @click="loadMoreHistory">
+              加载更多（还有 {{ remainingCount }} 条）
+            </el-button>
+            <span v-else style="color:#909399;font-size:13px;">已全部加载</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+  <script src="js/interactions.js"></script>
+  <script>
+    function getUrlParams() {
+      var params = {};
+      var search = window.location.search.substring(1);
+      if (search) {
+        search.split('&').forEach(function (pair) {
+          var parts = pair.split('=');
+          params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1] || '');
+        });
+      }
+      return params;
+    }
+
+    var urlParams = getUrlParams();
+    var requestedId = parseInt(urlParams.id || '1001', 10);
+
+    function findUserById(id) {
+      var hit = mockTableData.find(function (u) { return u.id === id; });
+      return hit || mockTableData[0];
+    }
+
+    new Vue({
+      el: '#app',
+      data: function () {
+        var u = findUserById(requestedId);
+        return {
+          pageLoading: false,
+          detailExpanded: true,
+          userId: u.id,
+          user: u,
+          // 操作历史已按时间倒序排列
+          allHistory: operationHistory.slice().sort(function (a, b) {
+            return a.time < b.time ? 1 : -1;
+          }),
+          // 默认展示最近 10 条，点击"加载更多"每次再追加 10 条
+          historyDisplayCount: 10
+        };
+      },
+      computed: {
+        displayedHistory: function () {
+          return this.allHistory.slice(0, this.historyDisplayCount);
+        },
+        hasMoreHistory: function () {
+          return this.historyDisplayCount < this.allHistory.length;
+        },
+        remainingCount: function () {
+          return this.allHistory.length - this.historyDisplayCount;
+        }
+      },
+      methods: {
+        loadMoreHistory: function () {
+          this.historyDisplayCount += 10;
+        },
+        goBack: function () {
+          window.location.href = 'index.html';
+        },
+        doCopy: function (text) {
+          var self = this;
+          var value = text == null ? '' : String(text);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(value).then(function () {
+              self.$message.success('复制成功');
+            }).catch(function () {
+              self._fallbackCopy(value);
+            });
+          } else {
+            this._fallbackCopy(value);
+          }
+        },
+        _fallbackCopy: function (value) {
+          var textarea = document.createElement('textarea');
+          textarea.value = value;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            this.$message.success('复制成功');
+          } catch (e) {
+            this.$message.warning('复制失败，请手动选取');
+          }
+          document.body.removeChild(textarea);
+        }
+      },
+      mounted: function () {
+        this.pageLoading = true;
+        var self = this;
+        setTimeout(function () { self.pageLoading = false; }, 400);
+      }
+    });
+  </script>
+</body>
+</html>
