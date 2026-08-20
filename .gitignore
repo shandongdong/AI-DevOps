@@ -20,6 +20,8 @@ target/
 .springBeans
 .DS_Store
 .vscode
+.mybatis
+.github
 
 ### IntelliJ IDEA ###
 .idea
