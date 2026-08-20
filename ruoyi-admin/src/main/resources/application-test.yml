@@ -1,0 +1,42 @@
+# 测试环境配置
+# 测试环境单机部署：前端、后端、Redis、MySQL8、Nginx 均在 192.168.130.41
+# 本文件自包含该环境的 Redis 与 Flyway 配置（主 application.yml 不含这两项）
+
+spring:
+  # Redis 配置
+  data:
+    redis:
+      # 地址
+      host: 192.168.130.41
+      # 端口，默认为6379
+      port: 6379
+      # 数据库索引
+      database: 0
+      # 密码走环境变量，未设时用占位符兜底（部署前必须 export REDIS_PASSWORD）
+      password: ${REDIS_PASSWORD:changeme}
+      # 连接超时时间
+      timeout: 10s
+      lettuce:
+        pool:
+          # 连接池中的最小空闲连接
+          min-idle: 0
+          # 连接池中的最大空闲连接
+          max-idle: 8
+          # 连接池的最大数据库连接数
+          max-active: 8
+          # 连接池最大阻塞等待时间（使用负值表示没有限制）
+          max-wait: -1ms
+  # Flyway 数据库迁移（测试环境启用，确保数据库版本一致）
+  # 注意：Spring Boot 4.1.0 已移除 FlywayAutoConfiguration，spring.flyway.* 仅由
+  #       ai-devops 的 FlywayConfig 用 @ConditionalOnProperty/@Value 读取生效。
+  #       baseline 等其余参数已在 FlywayConfig.java 硬编码（baselineVersion=2 等），
+  #       此处仅控制 enabled 与 locations。
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+# 日志级别（测试环境收窄到 info）
+logging:
+  level:
+    com.ruoyi: info
+    org.springframework: warn
