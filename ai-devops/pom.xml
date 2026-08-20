@@ -23,6 +23,16 @@
             <artifactId>ruoyi-common</artifactId>
         </dependency>
 
+        <!-- Flyway 数据库版本管理（版本由 Spring Boot BOM 管理，无需写 version）-->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
