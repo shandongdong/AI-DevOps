@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "specs/.*\\.(md)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '【SDD 提示】specs/ 下规范产物已变更（spec/plan/tasks）。建议运行 /speckit.analyze 检查 spec↔plan↔tasks 一致性与 constitution 合规。'"
+          }
+        ]
+      },
+      {
+        "matcher": "ai-devops/src/.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '【SDD 提示】ai-devops 业务代码已变更。constitution 质量门要求：同步更新 docs/（功能模块分析/目录结构/ER图）与对应 specs/NNN-slug/ 产物状态。'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '【SDD 流程】新功能/重构走 SDD：/speckit.specify → /speckit.plan → /speckit.tasks → /speckit.implement（产物落 specs/NNN-slug/）。动手前必读 memory/constitution.md。命令实现见 .claude/skills/。'"
+          }
+        ]
+      }
+    ]
+  }
+}

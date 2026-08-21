@@ -40,15 +40,11 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 ## 关键约定
 
 - **新建业务放** **`ai-devops`** **模块**（包 `com.ruoyi.aidevops.*`），落在启动类 `com.ruoyi.RuoYiApplication` 默认扫描范围内，**不改上游模块**。详见 `docs/development/8.项目开发规范.md` 1.7。
-- **新功能走 SDD 流程**：先写 `specs/NNN-slug/spec.md`（做什么）→ `plan.md`（怎么做，对照 `memory/constitution.md` 合规）→ `tasks.md`（拆任务标 `[P]`）→ 再写代码。样板见 `specs/001-health-check/`。详见 `specs/README.md`。
-- **白名单用** **`@Anonymous`** **注解**（`ruoyi-common.annotation`），由 `PermitAllUrlProperties` 自动扫描放行，**禁止改** **`SecurityConfig`** **硬编码加白名单**。
-- **菜单/权限走数据库**（`sys_menu`），前端动态路由，**不改前端静态路由**。
+- **新功能走 SDD 流程**：先写 `specs/NNN-slug/spec.md`（做什么）→ `plan.md`（怎么做，对照 `memory/constitution.md` 合规）→ `tasks.md`（拆任务标 `[P]`）→ 再写代码。样板见 `specs/001-health-check/`。详见 `specs/README.md`。**SDD 命令已落地为 Claude Code skill**（见 `.claude/skills/speckit-*/SKILL.md`），用 `/speckit.specify` 起步，Agent 协作入口见 `AGENTS.md`。
 - **ai-devops 业务表前缀** `ai_devops_`，与 `sys_`/`gen_` 区分。
 - **冲突处理**：你的独立模块文件保留你的；上游文件优先保留上游；配置类（yml/pom）手动合并保留双方。详见 `docs/development/8.项目开发规范.md` 四。
 
 ## 可用 MCP 工具
-
-> 与姊妹项目 RuoYi-Vue 共用同一套开发环境基础设施，连接信息基本一致；如实际有出入再改。
 
 | 服务         | 用途                              | 使用场景                              |
 | ---------- | ------------------------------- | --------------------------------- |
@@ -56,7 +52,7 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 | Redis      | 查询/操作开发环境缓存（192.168.30.41:6379）| 查在线用户、排查缓存问题、清理缓存                 |
 | Playwright | 浏览器自动化                          | UI 测试、截图验证、前端功能验证                 |
 
-优先使用 MCP 工具而非 CLI 命令（如 `redis-cli`、`mysql` 客户端、`git` 远程操作），MCP 工具已配置好连接信息，无需手动传参。
+可使用 MCP 或 CLI 命令（如 `redis-cli`、`mysql` 客户端、`git` 远程操作），MCP 工具已配置好连接信息，无需手动传参。CLI 命令如需要账号密码可以从 MCP 配置文件中获取。
 
 ## 构建与启动
 
