@@ -61,5 +61,5 @@ implement         /按 tasks.md 逐项实现
 - 功能变更同步更新对应 `specs/NNN-slug/` 产物。
 - constitution 修订需记录原因并给迁移计划（见 `memory/constitution.md` Governance 段）。
 - 不装 `specify` CLI 也可手写本目录文件，参照 `001-health-check/` 为样板。
-- **命令入口**：SDD 流程已落地为 Claude Code skill（`.claude/skills/speckit-*/SKILL.md`），用 `/speckit.specify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.implement` 驱动；`/speckit.analyze` 做只读一致性检查。Agent 协作指引见根 `AGENTS.md`。
+- **命令入口**：SDD 流程已落地为 Claude Code skill（`.claude/skills/speckit-*/SKILL.md`），用 `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement` 驱动；`/speckit-analyze` 做只读一致性检查。Agent 协作指引见根 `AGENTS.md`。
 - 模板源参考：[github/spec-kit](https://github.com/github/spec-kit) 的 `templates/` 目录。

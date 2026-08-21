@@ -40,7 +40,7 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 ## 关键约定
 
 - **新建业务放** **`ai-devops`** **模块**（包 `com.ruoyi.aidevops.*`），落在启动类 `com.ruoyi.RuoYiApplication` 默认扫描范围内，**不改上游模块**。详见 `docs/development/8.项目开发规范.md` 1.7。
-- **新功能走 SDD 流程**：先写 `specs/NNN-slug/spec.md`（做什么）→ `plan.md`（怎么做，对照 `memory/constitution.md` 合规）→ `tasks.md`（拆任务标 `[P]`）→ 再写代码。样板见 `specs/001-health-check/`。详见 `specs/README.md`。**SDD 命令已落地为 Claude Code skill**（见 `.claude/skills/speckit-*/SKILL.md`），用 `/speckit.specify` 起步，Agent 协作入口见 `AGENTS.md`。
+- **新功能走 SDD 流程**：先写 `specs/NNN-slug/spec.md`（做什么）→ `plan.md`（怎么做，对照 `memory/constitution.md` 合规）→ `tasks.md`（拆任务标 `[P]`）→ 再写代码。样板见 `specs/001-health-check/`。详见 `specs/README.md`。**SDD 命令已落地为 Claude Code skill**（见 `.claude/skills/speckit-*/SKILL.md`），用 `/speckit-specify` 起步，Agent 协作入口见 `AGENTS.md`。
 - **ai-devops 业务表前缀** `ai_devops_`，与 `sys_`/`gen_` 区分。
 - **冲突处理**：你的独立模块文件保留你的；上游文件优先保留上游；配置类（yml/pom）手动合并保留双方。详见 `docs/development/8.项目开发规范.md` 四。
 

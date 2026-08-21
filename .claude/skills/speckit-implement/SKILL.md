@@ -21,7 +21,7 @@ $ARGUMENTS
 ## 前置检查
 
 1. **定位 feature 目录**：扫 `specs/` 下目录，取待实现的（有 tasks.md）。设 `FEATURE_DIR=specs/<NNN>-<slug>`。
-2. **确认 tasks.md 存在**：否则报错"无 tasks.md，先跑 /speckit.tasks"。
+2. **确认 tasks.md 存在**：否则报错"无 tasks.md，先跑 /speckit-tasks"。
 3. 读 `FEATURE_DIR/tasks.md`（取任务列表、依赖、[P] 标记）。
 4. 读 `FEATURE_DIR/plan.md`（取技术方案、文件落点）。
 5. 读 `FEATURE_DIR/spec.md`（取验收标准，实现后对照验证）。
@@ -82,5 +82,5 @@ $ARGUMENTS
 
 ## 下一步建议
 
-- 实现完成 → **`/speckit.analyze`** 跨产物一致性复查。
-- 若新增 user story 或发现 spec/plan 漏洞 → 回 `/speckit.specify` 或 `/speckit.plan` 补全（SDD 双向反馈）。
+- 实现完成 → **`/speckit-analyze`** 跨产物一致性复查。
+- 若新增 user story 或发现 spec/plan 漏洞 → 回 `/speckit-specify` 或 `/speckit-plan` 补全（SDD 双向反馈）。

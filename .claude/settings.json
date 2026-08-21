@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '【SDD 提示】specs/ 下规范产物已变更（spec/plan/tasks）。建议运行 /speckit.analyze 检查 spec↔plan↔tasks 一致性与 constitution 合规。'"
+            "command": "echo '【SDD 提示】specs/ 下规范产物已变更（spec/plan/tasks）。建议运行 /speckit-analyze 检查 spec↔plan↔tasks 一致性与 constitution 合规。'"
           }
         ]
       },
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '【SDD 流程】新功能/重构走 SDD：/speckit.specify → /speckit.plan → /speckit.tasks → /speckit.implement（产物落 specs/NNN-slug/）。动手前必读 memory/constitution.md。命令实现见 .claude/skills/。'"
+            "command": "echo '【SDD 流程】新功能/重构走 SDD：/speckit-specify → /speckit-plan → /speckit-tasks → /speckit-implement（产物落 specs/NNN-slug/）。动手前必读 memory/constitution.md。命令实现见 .claude/skills/。'"
           }
         ]
       }

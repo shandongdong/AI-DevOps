@@ -16,7 +16,7 @@ disable-model-invocation: false
 $ARGUMENTS
 ```
 
-你 **必须** 先考虑用户输入（若非空）再继续。`$ARGUMENTS` 即触发命令时用户在 `/speckit.specify` 后输入的功能描述文本。
+你 **必须** 先考虑用户输入（若非空）再继续。`$ARGUMENTS` 即触发命令时用户在 `/speckit-specify` 后输入的功能描述文本。
 
 ## 执行流程
 
@@ -127,4 +127,4 @@ spec 聚焦 **WHAT 用户要 + WHY**，**避免 HOW**（不写语言、框架、
 
 ## 下一步建议
 
-spec 写完且校验通过后，运行 **`/speckit.plan`** 把规范翻译成技术方案 + Constitution Check。
+spec 写完且校验通过后，运行 **`/speckit-plan`** 把规范翻译成技术方案 + Constitution Check。

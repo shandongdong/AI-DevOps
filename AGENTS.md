@@ -11,14 +11,14 @@ AI-DevOps —— 基于若依（RuoYi-Vue 3.9.2）二次开发 + SDD（Spec-Driv
 所有新功能 / 重构 / 非平凡改动**必须走 SDD 流程**，不得直接写代码：
 
 ```
-/speckit.specify  → specs/NNN-slug/spec.md      （做什么、为什么，不涉技术栈）
-/speckit.plan     → specs/NNN-slug/plan.md       （怎么做 + Constitution Check 合规）
-/speckit.tasks    → specs/NNN-slug/tasks.md      （拆任务，标 [P] 并行）
-/speckit.implement→ 按tasks.md逐项写代码          （落 ai-devops 模块 + 同步文档）
-/speckit.analyze   → 只读跨产物一致性检查          （spec/plan/tasks 间是否脱节、是否违宪）
+/speckit-specify   → specs/NNN-slug/spec.md      （做什么、为什么，不涉技术栈）
+/speckit-plan      → specs/NNN-slug/plan.md       （怎么做 + Constitution Check 合规）
+/speckit-tasks     → specs/NNN-slug/tasks.md      （拆任务，标 [P] 并行）
+/speckit-implement → 按tasks.md逐项写代码          （落 ai-devops 模块 + 同步文档）
+/speckit-analyze   → 只读跨产物一致性检查          （spec/plan/tasks 间是否脱节、是否违宪）
 ```
 
-SDD 命令已落地为 Claude Code skill，见 `.claude/skills/speckit-*/SKILL.md`。命令入口即 `/speckit.specify` 等。产物落在 `specs/NNN-slug/`（NNN 扫现有目录递增、零填充 3 位），命名约定见 `specs/README.md`。样板见 `specs/001-health-check/`。
+SDD 命令已落地为 Claude Code skill，见 `.claude/skills/speckit-*/SKILL.md`。命令入口即 `/speckit-specify` 等。产物落在 `specs/NNN-slug/`（NNN 扫现有目录递增、零填充 3 位），命名约定见 `specs/README.md`。样板见 `specs/001-health-check/`。
 
 ## 必读基线
 

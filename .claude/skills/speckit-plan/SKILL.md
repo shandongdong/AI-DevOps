@@ -21,7 +21,7 @@ $ARGUMENTS
 ## 前置检查
 
 1. **定位 feature 目录**：扫 `specs/` 下目录，若只有一个待 plan 的（无 plan.md 或最近创建）直接用；若多个，问用户或取 `$ARGUMENTS` 指定的 NNN。设 `FEATURE_DIR=specs/<NNN>-<slug>`。
-2. **确认 spec 存在**：`FEATURE_DIR/spec.md` 必须存在且非空，否则报错"无 spec.md，先跑 /speckit.specify"。
+2. **确认 spec 存在**：`FEATURE_DIR/spec.md` 必须存在且非空，否则报错"无 spec.md，先跑 /speckit-specify"。
 
 ## 执行流程
 
@@ -94,7 +94,7 @@ $ARGUMENTS
 
 ## Implementation Phases
 
-<简述实现分几阶段、关键依赖顺序，供 /speckit.tasks 拆任务参考。>
+<简述实现分几阶段、关键依赖顺序，供 /speckit-tasks 拆任务参考。>
 
 ## Assumptions / Open Questions
 
@@ -113,4 +113,4 @@ $ARGUMENTS
 
 ## 下一步建议
 
-plan 通过合规后，运行 **`/speckit.tasks`** 把 plan 拆成可执行任务清单（标 [P] 并行）。
+plan 通过合规后，运行 **`/speckit-tasks`** 把 plan 拆成可执行任务清单（标 [P] 并行）。

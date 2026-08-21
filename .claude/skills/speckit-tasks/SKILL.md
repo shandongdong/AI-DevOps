@@ -21,7 +21,7 @@ $ARGUMENTS
 ## 前置检查
 
 1. **定位 feature 目录**：扫 `specs/` 下目录，取待 tasks 的（有 plan.md 但无/未完成 tasks.md）。设 `FEATURE_DIR=specs/<NNN>-<slug>`。
-2. **确认 plan 存在**：`FEATURE_DIR/plan.md` 必须存在，否则报错"无 plan.md，先跑 /speckit.plan"。
+2. **确认 plan 存在**：`FEATURE_DIR/plan.md` 必须存在，否则报错"无 plan.md，先跑 /speckit-plan"。
 3. 读 `FEATURE_DIR/spec.md`（取 user story 作任务分组依据）。
 4. 读 `FEATURE_DIR/plan.md`（取技术方案、文件落点、Implementation Phases）。
 5. 参考 `specs/001-health-check/tasks.md` 格式（样板）。
@@ -129,4 +129,4 @@ description: "Task list for <功能名> feature implementation"
 
 ## 下一步建议
 
-tasks 写完后，运行 **`/speckit.implement`** 按 Phase 逐项实现；或先 **`/speckit.analyze`** 查 spec/plan/tasks 三者一致性。
+tasks 写完后，运行 **`/speckit-implement`** 按 Phase 逐项实现；或先 **`/speckit-analyze`** 查 spec/plan/tasks 三者一致性。

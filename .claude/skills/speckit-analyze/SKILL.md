@@ -113,6 +113,6 @@ $ARGUMENTS
 
 ## 下一步建议
 
-- 有 P0/P1 项 → 回对应命令修：spec 漏洞跑 `/speckit.specify`、plan 不全跑 `/speckit.plan`、tasks 不全跑 `/speckit.tasks`。
-- 全通过且 tasks 已完成 → `/speckit.implement` 开始实现，或已实现则收尾。
+- 有 P0/P1 项 → 回对应命令修：spec 漏洞跑 `/speckit-specify`、plan 不全跑 `/speckit-plan`、tasks 不全跑 `/speckit-tasks`。
+- 全通过且 tasks 已完成 → `/speckit-implement` 开始实现，或已实现则收尾。
 - constitution 有违规 → **必须**回去改 spec/plan/tasks，不许稀释原则。
