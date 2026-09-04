@@ -27,3 +27,6 @@ export * from "./monitor/online";
 
 // 代码生成模块
 export * from "./tool/gen";
+
+// ai-devops 业务模块
+export * from "./ai-devops/calc";

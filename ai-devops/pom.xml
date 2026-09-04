@@ -33,6 +33,13 @@
             <artifactId>flyway-mysql</artifactId>
         </dependency>
 
+        <!-- 单元测试（版本由 Spring Boot BOM 管理）-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.aidevops.mapper.calc.CalcHistoryMapper">
+
+    <resultMap type="com.ruoyi.aidevops.domain.calc.CalcHistoryEntity" id="CalcHistoryResult">
+        <id     property="calcId"        column="calc_id"        />
+        <result property="firstNumber"   column="first_number"   />
+        <result property="secondNumber"  column="second_number"  />
+        <result property="operator"      column="operator"       />
+        <result property="result"        column="result"          />
+        <result property="status"        column="status"         />
+        <result property="delFlag"       column="del_flag"       />
+        <result property="createBy"      column="create_by"      />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"      />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"        column="remark"          />
+    </resultMap>
+
+    <sql id="selectCalcHistoryVo">
+        select calc_id, first_number, second_number, operator, result, status, del_flag, create_by, create_time, update_by, update_time, remark
+        from ai_devops_calc_history
+    </sql>
+
+    <select id="selectCalcHistoryList" parameterType="com.ruoyi.aidevops.domain.calc.CalcHistoryEntity" resultMap="CalcHistoryResult">
+        <include refid="selectCalcHistoryVo"/>
+        <where>
+            del_flag IN ('0')
+            <!-- 数据隔离：按当前登录用户过滤（constitution 数据安全，AC-2.5） -->
+            <if test="createBy != null and createBy != ''">
+                AND create_by = #{createBy}
+            </if>
+            <if test="operator != null and operator != ''">
+                AND operator = #{operator}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                AND date_format(create_time, '%y-%m-%d') &gt;= date_format(#{params.beginTime}, '%y-%m-%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                AND date_format(create_time, '%y-%m-%d') &lt;= date_format(#{params.endTime}, '%y-%m-%d')
+            </if>
+        </where>
+        order by calc_id desc
+    </select>
+
+    <insert id="insertCalcHistory" parameterType="com.ruoyi.aidevops.domain.calc.CalcHistoryEntity" useGeneratedKeys="true" keyProperty="calcId">
+        insert into ai_devops_calc_history(
+            <if test="firstNumber != null">first_number,</if>
+            <if test="secondNumber != null">second_number,</if>
+            <if test="operator != null and operator != ''">operator,</if>
+            <if test="result != null">result,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        )values(
+            <if test="firstNumber != null">#{firstNumber},</if>
+            <if test="secondNumber != null">#{secondNumber},</if>
+            <if test="operator != null and operator != ''">#{operator},</if>
+            <if test="result != null">#{result},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        )
+    </insert>
+
+    <!-- 软删除：置 del_flag=2 + update_by + update_time，不物理删除（AC-2.2） -->
+    <update id="deleteCalcHistoryByIds">
+        update ai_devops_calc_history set del_flag = '2', update_by = #{updateBy}, update_time = sysdate()
+        where calc_id in
+        <foreach collection="array" item="calcId" open="(" separator="," close=")">
+            #{calcId}
+        </foreach>
+    </update>
+
+</mapper>
