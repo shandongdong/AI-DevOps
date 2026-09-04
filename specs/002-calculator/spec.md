@@ -83,7 +83,7 @@
 ### Functional Requirements
 
 - **FR-001**: System MUST 提供四则运算接口（加/减/乘/除），接收两个数值，返回运算结果，路径前缀 `/aidevops/calc`。
-- **FR-002**: System MUST 在每次合法运算成功后，将运算式、结果、运算人、运算时间落库（表 `ai_devops_calc_list`）。
+- **FR-002**: System MUST 在每次合法运算成功后，将运算式、结果、运算人、运算时间落库（表 `ai_devops_calc_history`）。
 - **FR-003**: System MUST 拦截除数为 0，返回业务错误提示（非 500 异常），且不落库。
 - **FR-004**: System MUST 提供历史记录列表查询接口，支持分页与按运算符/时间范围过滤，且按当前登录用户隔离数据（只能看自己的记录）。
 - **FR-005**: System MUST 提供历史记录删除接口（软删除，置 `del_flag`，不物理删除），支持单条与批量。
@@ -92,7 +92,7 @@
 
 ### Key Entities *(include if feature involves data)*
 
-- **ai_devops_calc_list**：计算历史记录表
+- **ai_devops_calc_history**：计算历史记录表
   - `calc_id` bigint 主键（自增）
   - `first_number` double 第一个数
   - `second_number` double 第二个数
@@ -118,3 +118,5 @@
 - 前端复用项目既有 `@/utils/request`、`@/components`（分页等）、动态路由体系，参考 `docs/hifi-prototypes/TemplateA-StandardCRUD/` 做列表页骨架。
 - 计算器页交互参照旧项目 Vue2 计算器（按钮式输入 + 运算符 + 等号），但用 Vue3 `<script setup lang="ts">` + Element Plus 重写。
 - 验收测试用例（AC-x.x）在 implement 阶段映射为 JUnit5 单元测试，可追溯。
+- **AC-1.4（非数字输入）**：前端用 `parseFloat` 隐式拦截——当前输入为空或非法时等号不触发计算，无显式弹窗提示。如需"请输入有效数字"提示可在 index.vue 补 `proxy.$modal.msgWarning`，属可选增强。
+- **AC-1.5/1.6（未登录401、无权限403）**：由 Spring Security 框架保证，属集成测试范畴。本项目只做 Service 层单元测试（mock Mapper），安全拦截不做自动化测试，由 Security 框架 + `@PreAuthorize` 注解运行时保证。
