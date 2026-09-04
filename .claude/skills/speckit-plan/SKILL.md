@@ -71,7 +71,7 @@ $ARGUMENTS
 
 *GATE: Must pass before implementation. Re-check after design.*
 
-对照 `memory/constitution.md` Principles I–V + Security 段：
+对照 `memory/constitution.md` Principles I–VI + Security 段：
 
 | Principle | Pass | 说明 |
 |-----------|------|------|
@@ -80,6 +80,7 @@ $ARGUMENTS
 | III. 菜单数据驱动 | ✅/❌/N/A | <有菜单是否走 sys_menu + 动态路由，是否改静态路由> |
 | IV. 分层单向依赖 | ✅/❌/N/A | <是否 Controller→Service→Mapper→Domain 单向，功能域子包> |
 | V. 单体多模块与简单性 | ✅/❌/N/A | <是否无过度抽象，未额外拆分> |
+| VI. API 语义契约 | ✅/❌/N/A | <HTTP 方法是否对齐操作语义：查询 GET / 创建·动作 POST / 修改 PUT / 删除 DELETE；有副作用操作是否禁用 GET> |
 
 **凭据治理**（Security 段）：
 - <密码是否 ${ENV_VAR:默认值} 占位；表是否 ai_devops_ 前缀；结构变更是否走 Flyway>

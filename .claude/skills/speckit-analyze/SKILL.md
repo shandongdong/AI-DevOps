@@ -50,7 +50,7 @@ $ARGUMENTS
 
 ### 维度 4：constitution 合规（最重要）
 
-对照 `memory/constitution.md` 五原则 + Security 段，逐条查 spec/plan/tasks：
+对照 `memory/constitution.md` 六原则 + Security 段，逐条查 spec/plan/tasks：
 
 | 原则 | 检查点 | 通过？ |
 |---|---|---|
@@ -59,6 +59,7 @@ $ARGUMENTS
 | III 菜单数据驱动 | 新增菜单需求是否走 `sys_menu`？有无改前端静态路由？ | ✅/⚠️/N/A |
 | IV 分层依赖 | plan 文件结构是否 Controller→Service→Mapper→Domain 单向？功能域子包？ | ✅/⚠️ |
 | V 简单性 | 有无过度抽象、未用的扩展点、无端拆分？ | ✅/⚠️ |
+| VI API 语义契约 | HTTP 方法是否对齐操作语义（查询 GET / 创建·动作 POST / 修改 PUT / 删除 DELETE）？有无副作用操作误用 GET？ | ✅/⚠️/N/A |
 | 凭据治理 | 密码是否 `${ENV_VAR:默认值}` 占位？表是否 `ai_devops_` 前缀 + 审计字段？结构变更是否走 Flyway？ | ✅/⚠️/N/A |
 | 文档同步 | tasks 是否含文档同步任务（更新 docs/ + specs/）？ | ✅/⚠️ |
 

@@ -34,7 +34,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-对照 `memory/constitution.md` Principles I–V：
+对照 `memory/constitution.md` Principles I–VI：
 
 | Principle | Pass | 说明 |
 |-----------|------|------|
@@ -43,6 +43,7 @@
 | III. 菜单数据驱动 | N/A | 本功能无菜单（免登录接口） |
 | IV. 分层单向依赖 | ✅ | 仅 Controller 层（无业务逻辑，无需 Service/Mapper） |
 | V. 单体多模块与简单性 | ✅ | 新增 1 个 ai-devops 模块，未额外拆分，无过度抽象 |
+| VI. API 语义契约 | ✅ | 健康检查用 GET（只读查询无副作用，符合安全幂等语义） |
 
 **结论**：全部通过，无违规需豁免。
 

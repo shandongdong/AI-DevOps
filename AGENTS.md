@@ -22,13 +22,14 @@ SDD 命令已落地为 Claude Code skill，见 `.claude/skills/speckit-*/SKILL.m
 
 ## 必读基线
 
-动手前**必须读** `memory/constitution.md`（v1.0.0，治理宪法，凌驾于所有实践之上）。它定义了五条原则与凭据治理：
+动手前**必须读** `memory/constitution.md`（v1.1.0，治理宪法，凌驾于所有实践之上）。它定义了六条原则与凭据治理：
 
 1. **模块隔离**：业务落 `ai-devops` 模块（包 `com.ruoyi.aidevops.*`），不改上游模块（`ruoyi-system` 等）。
 2. **注解化白名单**：免登录用 `@Anonymous` 注解，**不改 `SecurityConfig` 硬编码**。
 3. **菜单数据驱动**：菜单/权限走 `sys_menu` 表 + 前端动态路由，**不改前端静态路由**。
 4. **分层单向依赖**：Controller → Service → Mapper → Domain，ai-devops 按功能域子包聚合。
 5. **YAGNI / 反过度抽象**：单体多模块，不引入未用的抽象层，直接用框架特性。
+6. **API 语义契约**：HTTP 方法对齐操作语义（查询 GET / 创建·动作 POST / 修改 PUT / 删除 DELETE），有副作用的操作**禁用 GET**。方法映射细则见 `docs/development/8.项目开发规范.md` 1.2。
 
 外加：
 - **凭据不入库**：密码用 `${ENV_VAR:默认值}` 占位（dev 内网默认值 / test-prod `changeme`），IP 非凭据可明文。业务表前缀 `ai_devops_`，结构变更走 Flyway。

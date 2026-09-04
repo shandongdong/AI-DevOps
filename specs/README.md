@@ -54,6 +54,7 @@ implement         /按 tasks.md 逐项实现
 | 编号 | 功能 | 状态 |
 |------|------|------|
 | 001 | [健康检查接口](001-health-check/spec.md) | ✅ 已落地 |
+| 002 | [计算器](002-calculator/spec.md) | ✅ 已落地 |
 
 ## 维护规则
 

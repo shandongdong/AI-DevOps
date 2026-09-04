@@ -12,6 +12,7 @@ Principles defined:
   III. 菜单数据驱动 (不改前端静态路由)
   IV.  分层单向依赖 (Controller→Service→Mapper→Domain, ai-devops 按功能域子包聚合)
   V.   单体多模块与简单性 (YAGNI, 对应 SDD Article VII/VIII 简单性与反过度抽象)
+  VI.  API 语义契约 (HTTP 方法对齐操作语义, 有副作用禁用 GET)
 
 Added sections:
   - Security & 凭据约束 (含业务表前缀 ai_devops_ + Flyway 迁移约定)
@@ -19,11 +20,22 @@ Added sections:
   - Governance
 
 Templates reviewed for alignment:
-  ✅ spec-kit/templates/plan-template.md — "Constitution Check" gate 由本文件 Principles I–V 在 plan 时填充
+  ✅ spec-kit/templates/plan-template.md — "Constitution Check" gate 由本文件 Principles I–VI 在 plan 时填充
   ✅ spec-kit/templates/spec-template.md — 无 constitution 专属 token, 无需改
   ✅ spec-kit/templates/tasks-template.md — task categories 已容纳本文件要求, 无需改
 
 Follow-up TODOs: none. RATIFICATION_DATE set to first adoption date below.
+
+v1.1.0 (2026-09-03) — MINOR: 新增 Principle VI「API 语义契约」
+  Reason: 002-calculator plan review 暴露规范缺口——compute 接口用 GET 落库（有副作用非幂等），
+    却因宪法无 HTTP 方法语义条款而 Constitution Check 全过。补原则 VI 强制 plan 阶段审查
+    方法语义对齐，堵住"GET 做写操作"类设计缺陷。
+  Propagated to:
+    - docs/development/8.项目开发规范.md 1.2 (补 HTTP 方法语义操作细则表)
+    - .claude/skills/speckit-plan/SKILL.md (Constitution Check 表 I–V → I–VI)
+    - .claude/skills/speckit-analyze/SKILL.md (维度4 表五原则 → 六原则)
+    - AGENTS.md (必读基线五条 → 六条)
+    - specs/001-health-check/plan.md, specs/002-calculator/plan.md (Check 表补 VI 行)
 -->
 
 # AI-DevOps Constitution
@@ -72,6 +84,18 @@ AI-DevOps（基于若依 RuoYi-Vue 3.9.2 二次开发，Spring Boot 4.1.0 / Java
 
 **Rationale:** 对应 SDD Article VII（简单性）与 Article VIII（反过度抽象）。LLM 生成代码时倾向过度抽象，本条强制在 plan 的 Constitution Check 里证明每个抽象的必要性。
 
+### VI. API 语义契约
+
+HTTP 方法必须对齐操作语义，不得为拼路径便利而错配方法：
+
+- **GET = 查询**（幂等、安全、无副作用）——只读，不改服务器状态。
+- **POST = 创建 / 触发动作**（非幂等、有副作用）——落库、改状态、触发副作用。
+- **PUT = 整体更新**（幂等）——全量替换资源。
+- **DELETE = 删除**——删除资源（本项目软删除，仍用 DELETE）。
+- **有副作用的操作（落库、改状态、触发副作用）一律禁用 GET**——GET 期望安全幂等，错配会被浏览器预取、CDN 缓存、日志重放误触发，产生脏数据。
+
+**Rationale:** RESTful 方法语义是 API 设计的基本约束，错配（如用 GET 做写操作）会引发难以排查的脏数据与安全问题。本项目 002-calculator 的 compute 接口曾用 GET 落库历史记录，因宪法无方法语义条款而 Constitution Check 全过——此原则堵住该缺口。详细操作映射表见 `docs/development/8.项目开发规范.md` 1.2。
+
 ## Security & 凭据约束
 
 - **凭据不入库**：数据源、Redis 等连接信息含真实密码时，禁止明文入库。采用 `${ENV_VAR:默认值}` 占位：**dev** 默认值用内网开发库密码（本地友好），**test/prod** 默认值用 `changeme` 占位符（库内零真实凭据，部署前必须 export 环境变量，未设则连接失败）。IP 非凭据，可保留明文。本地可用 `application-local.yml`（加 `.gitignore`）覆盖。
@@ -90,9 +114,9 @@ AI-DevOps（基于若依 RuoYi-Vue 3.9.2 二次开发，Spring Boot 4.1.0 / Java
 
 本宪法凌驾于所有其他开发实践之上；冲突时以本文件为准。既有代码库中它所编纂的模式仍是权威参考。
 
-- **Authority**：Principles I–V 是约束性门禁。plan 模板的 `## Constitution Check` 段必须对照这些原则评估；与 MUST 冲突的，靠改 spec/plan/tasks 解决，而非稀释原则。
+- **Authority**：Principles I–VI 是约束性门禁。plan 模板的 `## Constitution Check` 段必须对照这些原则评估；与 MUST 冲突的，靠改 spec/plan/tasks 解决，而非稀释原则。
 - **Amendments**：修订本文件需 PR + 修订原因 + 维护者批准 + 按下述版本策略 bump，并在顶部 SYNC IMPACT REPORT 记录。任何修订必须同 PR 内传播到依赖的模板与命令指引。
 - **Versioning policy（治理用 SemVer）**：MAJOR = 不向后兼容的治理变更或原则删除/重定义；MINOR = 新原则/段或实质性扩展；PATCH = 澄清与无语义改动的精炼。
 - **Compliance review**：每个 PR 与评审必须验证对本宪法的合规性。新增复杂度或任何偏离必须在 PR 内（plan 则在 Complexity Tracking 段）给出理由，未说明的违规阻塞合并。
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-20
+**Version**: 1.1.0 | **Ratified**: 2026-08-20 | **Last Revised**: 2026-09-03 (v1.1.0 +Principle VI)
