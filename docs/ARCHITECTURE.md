@@ -232,7 +232,8 @@ ai-devops/
     │   │   │       └── CalcController.java     compute/list/remove，权限 aidevops:calc:*
     │   │   ├── domain/
     │   │   │   └── calc/
-    │   │   │       └── CalcHistoryEntity.java  继承 BaseEntity，审计字段 + del_flag
+    │   │   │       ├── CalcHistoryEntity.java    继承 BaseEntity，审计字段 + del_flag
+    │   │   │       └── CalcComputeRequest.java   compute 入参 record（operator, first, second）
     │   │   ├── mapper/
     │   │   │   └── calc/
     │   │   │       └── CalcHistoryMapper.java  insert/selectList/软删除
