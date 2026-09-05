@@ -23,14 +23,15 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 | 分类     | 路径                        | 说明                                    |
 | ------ | ------------------------- | ------------------------------------- |
 | 文档索引   | `docs/README.md`          | 文档总入口与导航                              |
-| 快速启动   | `docs/development/1.项目快速启动.md`        | **新人先读**：从克隆到联调的完整搭建流程                |
-| 技术方案   | `docs/development/2.技术方案.md`          | 整体技术方案与部署                             |
-| 技术栈    | `docs/development/3.项目技术栈.md`         | Spring Boot 4.1 / Java 17 / Vue 3 等版本 |
-| 架构图    | `docs/development/4.项目架构图.md`         | 前后端分层 + Maven 模块依赖                    |
-| 功能模块   | `docs/development/5.功能模块分析.md`        | 7 模块功能拆解                              |
-| 目录结构   | `docs/development/6.项目目录结构.md`        | 完整模块与包路径树                             |
-| 数据库 ER | `docs/development/7.数据库ER关系图.md`      | sys\_ 表关系                             |
-| 开发规范   | `docs/development/8.项目开发规范.md`        | 分层、命名、注解、Git 约定                       |
+| 快速启动   | `docs/design-docs/项目快速启动.md`        | **新人先读**：从克隆到联调的完整搭建流程                |
+| 技术方案   | `docs/design-docs/技术方案.md`          | 整体技术方案与部署                             |
+| 技术栈    | `docs/design-docs/项目技术栈.md`         | Spring Boot 4.1 / Java 17 / Vue 3 等版本 |
+| 架构图    | `docs/ARCHITECTURE.md`         | 架构顶层地图：分层 + 模块依赖 + 目录结构 + 请求链路                    |
+| 功能模块   | `docs/design-docs/功能模块分析.md`        | 7 模块功能拆解                              |
+| 数据库 ER | `docs/design-docs/数据库ER关系图.md`      | sys\_ 表关系                             |
+| 开发规范   | `docs/design-docs/项目开发规范.md`        | 分层、命名、注解、Git 约定                       |
+| 产品规格   | `docs/product-specs/`         | 功能模块完整静态文档（模块全貌）                  |
+| 技术债     | `docs/tech-debt-tracker.md`   | 技术债与已否决方案追踪                           |
 | SDD 规范 | `memory/constitution.md`  | 全局宪法（治理原则，plan 合规依据）                  |
 | 功能规范   | `specs/NNN-slug/`         | 每个功能的 spec/plan/tasks 产物（SDD）         |
 | SDD 索引 | `specs/README.md`         | 规范驱动开发目录用法与命名约定                       |
@@ -39,10 +40,10 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 
 ## 关键约定
 
-- **新建业务放** **`ai-devops`** **模块**（包 `com.ruoyi.aidevops.*`），落在启动类 `com.ruoyi.RuoYiApplication` 默认扫描范围内，**不改上游模块**。详见 `docs/development/8.项目开发规范.md` 1.7。
+- **新建业务放** **`ai-devops`** **模块**（包 `com.ruoyi.aidevops.*`），落在启动类 `com.ruoyi.RuoYiApplication` 默认扫描范围内，**不改上游模块**。详见 `docs/design-docs/项目开发规范.md` 1.7。
 - **新功能走 SDD 流程**：先写 `specs/NNN-slug/spec.md`（做什么）→ `plan.md`（怎么做，对照 `memory/constitution.md` 合规）→ `tasks.md`（拆任务标 `[P]`）→ 再写代码。样板见 `specs/001-health-check/`。详见 `specs/README.md`。**SDD 命令已落地为 Claude Code skill**（见 `.claude/skills/speckit-*/SKILL.md`），用 `/speckit-specify` 起步，Agent 协作入口见 `AGENTS.md`。
 - **ai-devops 业务表前缀** `ai_devops_`，与 `sys_`/`gen_` 区分。
-- **冲突处理**：你的独立模块文件保留你的；上游文件优先保留上游；配置类（yml/pom）手动合并保留双方。详见 `docs/development/8.项目开发规范.md` 四。
+- **冲突处理**：你的独立模块文件保留你的；上游文件优先保留上游；配置类（yml/pom）手动合并保留双方。详见 `docs/design-docs/项目开发规范.md` 四。
 
 ## 可用 MCP 工具
 

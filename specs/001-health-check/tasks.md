@@ -67,7 +67,7 @@ description: "Task list for 健康检查接口 feature implementation"
 
 - [x] T005 [P] [US1] 编译验证：`mvn -pl ruoyi-admin -am -DskipTests clean package` → `BUILD SUCCESS`，确认 ai-devops 被 admin 正确解析打包
 - [x] T006 [US1] 对照验证：访问未加 `@Anonymous` 的接口（如 `/system/user/list`）应被拦截，确认白名单精确生效（spec 场景 2）
-- [x] T007 [P] [US1] 文档更新：更新 `docs/development/5.功能模块分析.md`（补 ai-devops 行）、`docs/development/6.项目目录结构.md`（补 ai-devops 树）、`docs/README.md` 索引
+- [x] T007 [P] [US1] 文档更新：更新 `docs/design-docs/功能模块分析.md`（补 ai-devops 行）、`docs/ARCHITECTURE.md`（补 ai-devops 树）、`docs/README.md` 索引
 
 **Checkpoint**: 全链路编译通过 + 接口验证通过 + 文档已同步。
 

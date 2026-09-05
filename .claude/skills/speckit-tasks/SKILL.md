@@ -82,7 +82,7 @@ description: "Task list for <功能名> feature implementation"
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 **Purpose**: <横切：文档同步、对照验证>
-- [ ] [P] [USx] <文档更新：更新 docs/development/5.功能模块分析.md、6.项目目录结构.md、docs/README.md>
+- [ ] [P] [USx] <文档更新：更新 docs/design-docs/功能模块分析.md、docs/ARCHITECTURE.md、docs/README.md>
 - [ ] [P] [USx] <对照验证：验证 spec 验收场景>
 
 ---

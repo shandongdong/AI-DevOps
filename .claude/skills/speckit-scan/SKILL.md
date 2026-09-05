@@ -70,7 +70,7 @@ find ruoyi-ui-vue3/src -path "*ai-devops*" -type f | sort
 
 ### 维度 1：docs ↔ code 漂移
 
-对 docs/development/ 下的文档（尤其 `5.功能模块分析.md` 接口表、`6.项目目录结构.md` 文件树、`7.数据库ER关系图.md` 表名/迁移名），逐一比对代码真值：
+对 docs/ 下的文档（尤其 `design-docs/功能模块分析.md` 接口表、`ARCHITECTURE.md` 目录结构段、`design-docs/数据库ER关系图.md` 表名/迁移名），逐一比对代码真值：
 
 - docs 里出现的每个 `ai_devops_*` 表名，是否在 Flyway SQL 的 `create table` 里存在？（表名漂移）
 - docs 里出现的每个 `V*__*.sql` 迁移文件名，是否在 `db/migration/` 实际存在？（文件名漂移）
@@ -103,7 +103,7 @@ find ruoyi-ui-vue3/src -path "*ai-devops*" -type f | sort
 ```markdown
 ## 漂移扫描报告
 
-**扫描范围**：docs/development/*.md + specs/*/ + ai-devops 实际代码
+**扫描范围**：docs/design-docs/*.md + docs/ARCHITECTURE.md + specs/*/ + ai-devops 实际代码
 **日期**：<今日>
 
 ### 摘要

@@ -62,8 +62,8 @@ $ARGUMENTS
 
 实现过程中涉及以下变更时**必须同步更新**（不能等最后批量）：
 
-- 新增/改 ai-devops 模块包结构 → 更新 `docs/development/5.功能模块分析.md` + `docs/development/6.项目目录结构.md`。
-- 新增业务表 → 更新 `docs/development/7.数据库ER关系图.md`（如有业务表关系）+ specs 产物。
+- 新增/改 ai-devops 模块包结构 → 更新 `docs/design-docs/功能模块分析.md` + `docs/ARCHITECTURE.md` 的目录结构段。
+- 新增业务表 → 更新 `docs/design-docs/数据库ER关系图.md`（如有业务表关系）+ specs 产物。
 - 功能落地 → 更新 `specs/<NNN>/` 产物状态（spec.md Status 段改 ✅ Implemented）+ `specs/README.md` 已有功能表加行。
 - 配置/部署变化 → 更新 `docs/deploy/` 与 `CLAUDE.md` 相关段。
 
@@ -74,7 +74,7 @@ $ARGUMENTS
 每个任务或逻辑组完成后提交（用户若要求才提交，否则只 stage）：
 - commit 格式：`type(scope): 中文描述`，scope 用模块级（`ai-devops`/`admin`/`system`/`ui`/`docs-*` 等）。
 - **不加 `Co-Authored-By`**。
-- 删除类操作单独成提交（见 `docs/development/8.项目开发规范.md` 冲突处理）。
+- 删除类操作单独成提交（见 `docs/design-docs/项目开发规范.md` 冲突处理）。
 
 ## 完成报告
 

@@ -89,9 +89,9 @@ description: "Task list for 计算器 feature implementation"
 
 **Purpose**: 改代码同步更新 docs/ + specs/
 
-- [x] T014 [P] [US1] 更新 `docs/development/5.功能模块分析.md`：补 ai-devops 模块计算器功能行
-- [x] T015 [P] [US1] 更新 `docs/development/6.项目目录结构.md`：补 ai-devops 的 controller/service/mapper/domain/calc 子包树 + 前端 ai-devops/calc 目录
-- [x] T016 [P] [US2] 更新 `docs/development/7.数据库ER关系图.md`：补 `ai_devops_calc_history` 表（若有业务表关系则补）
+- [x] T014 [P] [US1] 更新 `docs/design-docs/功能模块分析.md`：补 ai-devops 模块计算器功能行
+- [x] T015 [P] [US1] 更新 `docs/ARCHITECTURE.md`：补 ai-devops 的 controller/service/mapper/domain/calc 子包树 + 前端 ai-devops/calc 目录
+- [x] T016 [P] [US2] 更新 `docs/design-docs/数据库ER关系图.md`：补 `ai_devops_calc_history` 表（若有业务表关系则补）
 - [x] T017 [P] [US1] 更新 `specs/README.md`：已有功能表加 002 计算器行（状态 ✅ Implemented）
 - [x] T018 [US1] 更新 `specs/002-calculator/spec.md`：Status 改 ✅ Implemented
 

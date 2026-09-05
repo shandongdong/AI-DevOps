@@ -29,7 +29,7 @@ SDD 命令已落地为 Claude Code skill，见 `.claude/skills/speckit-*/SKILL.m
 3. **菜单数据驱动**：菜单/权限走 `sys_menu` 表 + 前端动态路由，**不改前端静态路由**。
 4. **分层单向依赖**：Controller → Service → Mapper → Domain，ai-devops 按功能域子包聚合。**由 ArchUnit 测试 `LayerDependencyTest` 机械强制**（`mvn test` 时检查，违规即红，非软约束）。
 5. **YAGNI / 反过度抽象**：单体多模块，不引入未用的抽象层，直接用框架特性。
-6. **API 语义契约**：HTTP 方法对齐操作语义（查询 GET / 创建·动作 POST / 修改 PUT / 删除 DELETE），有副作用的操作**禁用 GET**。方法映射细则见 `docs/development/8.项目开发规范.md` 1.2。
+6. **API 语义契约**：HTTP 方法对齐操作语义（查询 GET / 创建·动作 POST / 修改 PUT / 删除 DELETE），有副作用的操作**禁用 GET**。方法映射细则见 `docs/design-docs/项目开发规范.md` 1.2。
 
 外加：
 - **凭据不入库**：密码用 `${ENV_VAR:默认值}` 占位（dev 内网默认值 / test-prod `changeme`），IP 非凭据可明文。业务表前缀 `ai_devops_`，结构变更走 Flyway。
@@ -52,7 +52,7 @@ plan 阶段的 `## Constitution Check` 段必须逐条对照上述原则评估�
 ## 关键约定提醒
 
 - **业务代码落 `ai-devops` 模块**，包 `com.ruoyi.aidevops.{controller/service/mapper/domain/util}.{modulexxx}`。
-- **不改上游模块**（`ruoyi-admin/framework/system/quartz/generator/common`），冲突处理见 `docs/development/8.项目开发规范.md`。
+- **不改上游模块**（`ruoyi-admin/framework/system/quartz/generator/common`），冲突处理见 `docs/design-docs/项目开发规范.md`。
 - **白名单用 `@Anonymous`，菜单走 `sys_menu`**——两者都不改静态文件。
 - **业务表 `ai_devops_` 前缀**，结构变更走 Flyway（`ai-devops/src/main/resources/db/migration/`，业务表 V3 起编号）。
 - **commit**：`feat(ai-devops):` / `docs(deploy):` / `chore(pom):` 等模块级 scope，中文描述，无 Co-Authored-By。
