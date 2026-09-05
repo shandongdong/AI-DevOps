@@ -27,7 +27,7 @@ SDD 命令已落地为 Claude Code skill，见 `.claude/skills/speckit-*/SKILL.m
 1. **模块隔离**：业务落 `ai-devops` 模块（包 `com.ruoyi.aidevops.*`），不改上游模块（`ruoyi-system` 等）。
 2. **注解化白名单**：免登录用 `@Anonymous` 注解，**不改 `SecurityConfig` 硬编码**。
 3. **菜单数据驱动**：菜单/权限走 `sys_menu` 表 + 前端动态路由，**不改前端静态路由**。
-4. **分层单向依赖**：Controller → Service → Mapper → Domain，ai-devops 按功能域子包聚合。
+4. **分层单向依赖**：Controller → Service → Mapper → Domain，ai-devops 按功能域子包聚合。**由 ArchUnit 测试 `LayerDependencyTest` 机械强制**（`mvn test` 时检查，违规即红，非软约束）。
 5. **YAGNI / 反过度抽象**：单体多模块，不引入未用的抽象层，直接用框架特性。
 6. **API 语义契约**：HTTP 方法对齐操作语义（查询 GET / 创建·动作 POST / 修改 PUT / 删除 DELETE），有副作用的操作**禁用 GET**。方法映射细则见 `docs/development/8.项目开发规范.md` 1.2。
 

@@ -36,6 +36,14 @@ v1.1.0 (2026-09-03) — MINOR: 新增 Principle VI「API 语义契约」
     - .claude/skills/speckit-analyze/SKILL.md (维度4 表五原则 → 六原则)
     - AGENTS.md (必读基线五条 → 六条)
     - specs/001-health-check/plan.md, specs/002-calculator/plan.md (Check 表补 VI 行)
+
+2026-09-05 — 注释性更新（不 bump 版本，原则内容未变）：
+  Principle IV「分层单向依赖」补 Mechanical enforcement 段——引入 ArchUnit 测试
+  LayerDependencyTest 在 mvn test 时机械强制四层单向 + Controller 不得直查 Mapper。
+  原则 IV 本身未改（仍为分层单向），仅补"由测试机械强制"的执行手段说明。
+  Propagated to:
+    - docs/development/8.项目开发规范.md 1.1 (补 ArchUnit 强制说明)
+    - AGENTS.md (必读基线原则 4 补 ArchUnit 标注)
 -->
 
 # AI-DevOps Constitution
@@ -73,6 +81,8 @@ AI-DevOps（基于若依 RuoYi-Vue 3.9.2 二次开发，Spring Boot 4.1.0 / Java
 - **ai-devops 按功能域分包**：`com.ruoyi.aidevops.{controller/service/mapper/domain/util}.{modulexxx}`，每个功能域自带完整四层，便于按域增删与 LLM 生成。
 
 **Rationale:** 分层是若依的既有架构，单向依赖保证可测试性与可替换性。跨层调用（如 Controller 直查 Mapper）会绕过事务边界与日志切面，是 bug 与安全漏洞的温床。功能域子包让单个业务域各层文件聚拢，优于"按层堆叠"的扁平结构。
+
+**Mechanical enforcement:** 本原则由 `ai-devops` 模块的 ArchUnit 测试 `com.ruoyi.aidevops.architecture.LayerDependencyTest` 在 `mvn test` 时机械强制——四层单向依赖 + Controller 不得直查 Mapper，违规代码测试期即失败。这是 Constitution 原则中第一个从"文字约束"升级为"机器可查 Computational sensor"的条款。
 
 ### V. 单体多模块与简单性（YAGNI）
 

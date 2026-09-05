@@ -40,6 +40,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ArchUnit 架构约束测试（constitution 原则 IV 分层单向依赖的机械强制）-->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>1.4.2</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
