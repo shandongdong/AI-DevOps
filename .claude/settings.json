@@ -1,5 +1,72 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Write(ruoyi-admin/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止向上游模块 ruoyi-admin/ 写文件——自有业务必须落 ai-devops/ 模块（com.ruoyi.aidevops.*）。上游文件 merge upstream 时会冲突。如确需改上游，需人工评审 + PR。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Write(ruoyi-framework/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止向 ruoyi-framework/ 写文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Write(ruoyi-system/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止向 ruoyi-system/ 写文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Write(ruoyi-quartz/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止向 ruoyi-quartz/ 写文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Write(ruoyi-generator/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止向 ruoyi-generator/ 写文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Write(ruoyi-common/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止向 ruoyi-common/ 写文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(ruoyi-admin/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止编辑上游模块 ruoyi-admin/ 文件——自有业务落 ai-devops/。如确需改上游，需人工评审 + PR。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(ruoyi-framework/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止编辑 ruoyi-framework/ 文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(ruoyi-system/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止编辑 ruoyi-system/ 文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(ruoyi-quartz/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止编辑 ruoyi-quartz/ 文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(ruoyi-generator/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止编辑 ruoyi-generator/ 文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          },
+          {
+            "type": "command",
+            "if": "Edit(ruoyi-common/**)",
+            "command": "echo '【constitution 原则 I 阻断】禁止编辑 ruoyi-common/ 文件——自有业务落 ai-devops/。上游模块不触碰。' >&2; exit 2"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "specs/.*\\.(md)",

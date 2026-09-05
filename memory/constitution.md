@@ -44,6 +44,17 @@ v1.1.0 (2026-09-03) — MINOR: 新增 Principle VI「API 语义契约」
   Propagated to:
     - docs/development/8.项目开发规范.md 1.1 (补 ArchUnit 强制说明)
     - AGENTS.md (必读基线原则 4 补 ArchUnit 标注)
+
+2026-09-05 — 注释性更新（不 bump 版本，原则内容未变）：
+  Principle I「模块隔离与上游零冲突」补 Mechanical enforcement 段——引入 PreToolUse
+  hook 在 .claude/settings.json 机械阻断 Write/Edit 写入 6 个上游模块路径（exit 2）。
+  原则 I 本身未改（仍为模块隔离），仅补"由 hook 机械阻断"的执行手段说明。
+  这是本项目第二个机械强制条款（继原则 IV ArchUnit 之后）：
+  原则 IV = Computational sensor（测试期拦层内依赖），原则 I = 阻断 sensor（工具期拦跨模块写入）。
+  Propagated to:
+    - .claude/settings.json (新增 PreToolUse 段，12 条 if)
+    - docs/development/8.项目开发规范.md (补 hook 阻断说明)
+    - AGENTS.md (必读基线原则 1 补 hook 标注)
 -->
 
 # AI-DevOps Constitution
@@ -61,6 +72,8 @@ AI-DevOps（基于若依 RuoYi-Vue 3.9.2 二次开发，Spring Boot 4.1.0 / Java
 - **不得为单一功能新建额外模块或引入微服务**，除非有明确的复杂度与团队规模需求。
 
 **Rationale:** 持续同步上游是本项目的前提，模块隔离把"冲突救火"变成"集中在根 pom 等少量可预测文件"。这与 SDD Article VII（简单性）一致——最小结构、拒绝过度拆分。
+
+**Mechanical enforcement:** 本原则由 `.claude/settings.json` 的 PreToolUse hook 机械阻断——Write/Edit 工具试图写入 `ruoyi-admin/framework/system/quartz/generator/common` 任一上游模块路径时，hook `exit 2` 直接拦截，工具调用失败、文件不写入，stderr 返回原则 I 阻断理由。AI 无法绕过（阻断发生在工具执行前）。这是 constitution 原则中第二个从"文字约束"升级为"机器可查 sensor"的条款（继原则 IV 的 ArchUnit 之后），与原则 IV 互补：原则 IV 管层内单向（Computational sensor，测试期拦），原则 I 管模块隔离（阻断 Sensor，工具期拦）。
 
 ### II. 注解化白名单
 
