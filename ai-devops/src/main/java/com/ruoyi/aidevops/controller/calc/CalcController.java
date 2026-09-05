@@ -1,6 +1,7 @@
 package com.ruoyi.aidevops.controller.calc;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.ruoyi.aidevops.domain.calc.CalcComputeRequest;
 import com.ruoyi.aidevops.domain.calc.CalcHistoryEntity;
 import com.ruoyi.aidevops.service.calc.ICalcHistoryService;
@@ -30,6 +32,9 @@ public class CalcController extends BaseController
 {
     @Autowired
     private ICalcHistoryService calcHistoryService;
+
+    // 取消注释执行 mvn test 会触发 ArchUnit 约束检查，可验证 ArchUnit 约束（原则 IV 分层单向依赖）
+    // @Autowired private CalcHistoryMapper calcHistoryMapper;
 
     /**
      * 四则运算并落库历史（POST + JSON body，RESTful：运算会创建历史记录，非幂等）
