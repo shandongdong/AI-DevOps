@@ -117,7 +117,6 @@ DispatcherServlet
 ```
 AI-DevOps/
 ├── pom.xml                      根 pom（聚合 + 版本管理）
-├── README.md
 ├── LICENSE
 ├── ry.sh                        启动脚本（Linux，Mac/Ubuntu 部署环境）
 ├── deploy_to_prod.sh            生产环境一键部署脚本（三机滚动）
