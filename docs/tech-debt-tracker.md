@@ -11,7 +11,7 @@
 | 3 | 原则 III 菜单数据驱动机械强制 | 未做 | 菜单走 `sys_menu` 靠 review，未检查是否改了前端静态路由。同上，靠代码模式不易 matcher 拦。 |
 | 4 | PMD/Checkstyle 接进 mvn test | 未做 | 重复代码/圈复杂度/缺测试覆盖全没覆盖。低垂果实，后续可补。属 Maintainability harness 维度。 |
 | 5 | /speckit-scan 自动化/定期跑 | 未做 | 当前手动调起。先验证价值再考虑 cron 自动化（YAGNI）。稳定后接 CI 定期扫。 |
-| 6 | /speckit-scan 扫描模式补盲 | 考虑中 | 首轮漏扫 `.java` 类名漂移（只 grep `*.xml`），重扫补上。Inferential sensor 需实战迭代完善扫描模式。 |
+| 6 | /speckit-scan 扫描模式补盲 | 考虑中 | 首轮漏扫 `.java` 类名对不上（只 grep `*.xml`），重扫补上。Inferential sensor 需实战迭代完善扫描模式。 |
 
 ## 已否决的方案（记录决策，避免重复讨论）
 
@@ -19,7 +19,7 @@
 |---|---|---|---|
 | 1 | specs/ 加 active/completed 分类 | 否决 | 用户明确说不用区分状态。specs/README 的状态表已够用。 |
 | 2 | 拆 项目开发规范.md 为 DESIGN.md/SECURITY.md 等根目录单文件 | 否决 | 项目规模未到拆分临界。当前按语义命名集中一份已够用（YAGNI）。 |
-| 3 | 自动生成 docs/generated/db-schema.md | 否决 | 手写 ER 图 + /speckit-scan 已能查漂移。自动生成属可选增强，非必需。 |
+| 3 | 自动生成 docs/generated/db-schema.md | 否决 | 手写 ER 图 + /speckit-scan 已能查对不上。自动生成属可选增强，非必需。 |
 | 4 | docs/exec-plans/active + completed 目录结构 | 否决 | 同 #1，不区分状态。 |
 
 ## 架构/规范债
