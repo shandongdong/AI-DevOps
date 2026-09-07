@@ -15,6 +15,7 @@
 | 开发 | [项目开发规范](design-docs/项目开发规范.md) | 分层、命名、注解、Git 约定 |
 | 产品规格 | [product-specs/](product-specs/) | 功能模块完整静态文档（模块全貌） |
 | 技术债 | [tech-debt-tracker](tech-debt-tracker.md) | 技术债与已否决方案追踪 |
+| 参考资料 | [references/](references/) | 外部资料内化副本（llms.txt/规范摘要，规划中） |
 
 ## 子目录
 
@@ -22,6 +23,7 @@
 |------|------|
 | [design-docs/](design-docs/) | 设计文档（技术方案/架构/规范/流程等，按语义命名） |
 | [product-specs/](product-specs/) | 功能模块完整静态文档（模块全貌，独立维护） |
+| [references/](references/) | 外部参考资料内化副本（llms.txt/规范摘要，规划中） |
 | [deploy/](deploy/) | 多环境部署文档、Nginx 配置、备份脚本（已落地） |
 | [hifi-prototypes/](hifi-prototypes/) | 高保真原型模板（通用 CRUD 模板，双击即跑） |
 | [tools/](tools/) | 工具脚本与使用说明（规划中） |

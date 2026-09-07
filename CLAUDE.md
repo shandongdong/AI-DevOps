@@ -32,6 +32,7 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 | 开发规范   | `docs/design-docs/项目开发规范.md`        | 分层、命名、注解、Git 约定                       |
 | 产品规格   | `docs/product-specs/`         | 功能模块完整静态文档（模块全貌）                  |
 | 技术债     | `docs/tech-debt-tracker.md`   | 技术债与已否决方案追踪                           |
+| 参考资料   | `docs/references/`         | 外部资料内化副本（llms.txt/规范摘要，规划中）   |
 | SDD 规范 | `memory/constitution.md`  | 全局宪法（治理原则，plan 合规依据）                  |
 | 功能规范   | `specs/NNN-slug/`         | 每个功能的 spec/plan/tasks 产物（SDD）         |
 | SDD 索引 | `specs/README.md`         | 规范驱动开发目录用法与命名约定                       |

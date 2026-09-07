@@ -126,6 +126,7 @@ AI-DevOps/
 │   ├── ARCHITECTURE.md          架构顶层地图（本文）
 │   ├── design-docs/             设计文档（技术方案/架构/规范/流程等）
 │   ├── product-specs/           功能模块完整静态文档（模块全貌）
+│   ├── references/             外部参考资料内化副本（llms.txt/规范摘要）
 │   ├── tech-debt-tracker.md     技术债追踪
 │   ├── deploy/                  多环境部署资产
 │   ├── hifi-prototypes/         高保真原型模板（通用 CRUD，纯 HTML+CDN）
