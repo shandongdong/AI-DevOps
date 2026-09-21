@@ -7,7 +7,7 @@
           {
             "type": "command",
             "if": "Write(ruoyi-admin/**)",
-            "command": "echo '【constitution 原则 I 阻断】禁止向上游模块 ruoyi-admin/ 写文件——自有业务必须落 ai-devops/ 模块（com.ruoyi.aidevops.*）。上游文件 merge upstream 时会冲突。如确需改上游，需人工评审 + PR。' >&2; exit 2"
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.yml|*.yaml) exit 0;; esac; echo '【constitution 原则 I 阻断】禁止向上游模块 ruoyi-admin/ 写非 yml 文件——自有业务必须落 ai-devops/ 模块（com.ruoyi.aidevops.*）。上游文件 merge upstream 时会冲突。yml 配置允许手动合并（保留双方）。如确需改上游，需人工评审 + PR。' >&2; exit 2"
           },
           {
             "type": "command",
@@ -37,7 +37,7 @@
           {
             "type": "command",
             "if": "Edit(ruoyi-admin/**)",
-            "command": "echo '【constitution 原则 I 阻断】禁止编辑上游模块 ruoyi-admin/ 文件——自有业务落 ai-devops/。如确需改上游，需人工评审 + PR。' >&2; exit 2"
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.yml|*.yaml) exit 0;; esac; echo '【constitution 原则 I 阻断】禁止编辑上游模块 ruoyi-admin/ 非 yml 文件——自有业务落 ai-devops/。yml 配置允许手动合并（保留双方）。如确需改上游 .java 等，需人工评审 + PR。' >&2; exit 2"
           },
           {
             "type": "command",

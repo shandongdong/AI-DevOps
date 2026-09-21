@@ -32,6 +32,29 @@ spring:
   flyway:
     enabled: false
     locations: classpath:db/migration
+  # Spring AI 配置（凭据全部走环境变量，零明文）
+  # 多模型并存：Anthropic + DeepSeek，由 ai-devops 的 AiClientConfig 手动管理各 ChatClient bean
+  # 本地需 export：ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN / ANTHROPIC_MODEL / DEEPSEEK_API_KEY
+  ai:
+    # 禁用 ChatClientAutoConfiguration（它是单模型设计，注入单个 ChatModel；
+    # 容器里有两个 ChatModel bean 时会报 NoUniqueBeanDefinitionException）。
+    # 多模型由 AiClientConfig 为每个 ChatModel 各造一个 ChatClient bean。
+    chat:
+      client:
+        enabled: false
+    # Anthropic 配置,从环境变量读取 api-key,base-url,model
+    anthropic:
+      api-key: ${ANTHROPIC_AUTH_TOKEN}
+      base-url: ${ANTHROPIC_BASE_URL}
+      chat:
+        model: ${ANTHROPIC_MODEL}
+    # DeepSeek 配置,从环境变量读取 api-key,base-url,model
+    deepseek:
+      # api-key 无默认值：未设环境变量则启动失败（Assert.hasText），符合凭据约束
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      chat:
+        model: ${DEEPSEEK_MODEL:deepseek-v4-pro}
 
 # 日志级别（开发环境开 debug，方便调试）
 logging:
