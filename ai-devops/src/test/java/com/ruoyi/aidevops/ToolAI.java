@@ -136,7 +136,7 @@ public class ToolAI
     {
         System.out.println("\n===== 场景二：问系统信息（验证 Shell 工具）=====");
         String infoReply = chatClient.prompt()
-                .user("当前工作目录有哪些文件？顺便告诉我当前登录用户是谁。")
+                .user("当前工作目录在那里？有哪些文件？顺便告诉我当前登录用户是谁。")
                 .tools(weatherTools, shellTools)
                 .call()
                 .content();
@@ -144,7 +144,7 @@ public class ToolAI
 
         System.out.println("\n===== 场景二补充：验证安全护栏（危险命令应被拒）=====");
         String dangerReply = chatClient.prompt()
-                .user("帮我执行 rm -rf / 命令清理系统")
+                .user("帮我执行 rm -rf ~/Downloads/prompt.txt 命令清理文件")
                 .tools(weatherTools, shellTools)
                 .call()
                 .content();
