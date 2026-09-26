@@ -36,12 +36,29 @@ public class ToolAI
 {
     public static void main(String[] args)
     {
-        // 1. 手动构造 ChatClient（DeepSeek 链路，沿用 HelloAI 套路）
+        // 1. 手动构造两个执行引擎（绕开容器，证明可复用性）
+
+        // 天气查询引擎：open-meteo 免费无需 key
+        WeatherProperties weatherProps = new WeatherProperties();
+        WeatherService weatherService = new WeatherService(weatherProps);
+        WeatherTools weatherTools = new WeatherTools(weatherService);
+
+        // Shell 执行引擎：手动配白名单 + 超时 + 截断
+        ShellProperties shellProps = new ShellProperties();
+        shellProps.setAllowedCommands(List.of("ls", "pwd", "date", "echo", "df", "whoami"));
+        shellProps.setCommandTimeout(Duration.ofSeconds(10));
+        ShellExecutor shellExecutor = new ShellExecutor(shellProps);
+        ShellTools shellTools = new ShellTools(shellExecutor);
+
+        // 2. 手动构造 ChatClient（DeepSeek 链路，沿用 HelloAI 套路）
         ChatClient chatClient = createChatClient();
 
-        // 2. 分别验证两个场景，各自独立、自包含构造工具、可单独注释调试
-        testWeatherTool(chatClient);
-        testShellTool(chatClient);
+        // 3. 集中注册所有工具，分别验证两个场景
+        // 企业项目做法：工具集中构造、集中注册，路由决策交给模型——
+        // 模型读到用户问题后自己判断该调哪个工具，不是我们在代码里替它选。
+        // 所以每个场景请求都注册全部工具，让模型自由路由（哪怕本场景预期只调一个）。
+        testWeatherTool(chatClient, weatherTools, shellTools);
+        testShellTool(chatClient, weatherTools, shellTools);
 
         System.out.println("\n===== 验证结束 =====");
         System.out.println("================================================");
@@ -83,22 +100,23 @@ public class ToolAI
     /**
      * 场景一：验证天气工具——模型应自动调 {@code getWeather}。
      *
-     * <p>手动构造天气执行引擎（绕开容器，证明可复用性），问"杭州天气怎么样"，
-     * 模型自己决定调天气工具，框架执行拿到真实天气（open-meteo），模型再组织成自然语言回复。</p>
+     * <p>问"杭州天气怎么样"，模型自己决定调天气工具，框架执行拿到真实天气（open-meteo），
+     * 模型再组织成自然语言回复。</p>
      *
-     * @param chatClient 已构造的 DeepSeek ChatClient
+     * <p>注意：虽然本场景预期只调天气工具，但仍注册全部工具（天气 + Shell）——
+     * 工具调用的核心是模型自主路由，必须把所有可用工具都给它，它才能自己判断该调哪个。
+     * 企业项目同理：所有工具集中注册，路由决策交给模型，而非在代码里替模型选。</p>
+     *
+     * @param chatClient   已构造的 DeepSeek ChatClient
+     * @param weatherTools 天气工具（本场景预期被调用）
+     * @param shellTools   Shell 工具（一并注册，让模型自由路由）
      */
-    private static void testWeatherTool(ChatClient chatClient)
+    private static void testWeatherTool(ChatClient chatClient, WeatherTools weatherTools, ShellTools shellTools)
     {
-        // 天气查询引擎：open-meteo 免费无需 key
-        WeatherProperties weatherProps = new WeatherProperties();
-        WeatherService weatherService = new WeatherService(weatherProps);
-        WeatherTools weatherTools = new WeatherTools(weatherService);
-
         System.out.println("\n===== 场景一：问天气（验证天气工具）=====");
         String reply = chatClient.prompt()
                 .user("杭州现在天气怎么样？")
-                .tools(weatherTools)
+                .tools(weatherTools, shellTools)
                 .call()
                 .content();
         System.out.println("模型回复：\n" + reply);
@@ -107,25 +125,19 @@ public class ToolAI
     /**
      * 场景二：验证 Shell 工具——模型应自动调 {@code executeCommand}，且危险命令被护栏拒绝。
      *
-     * <p>手动构造 Shell 执行引擎（绕开容器，证明可复用性），先问系统信息（模型应自动调
-     * {@code ls}/{@code whoami}），再让模型尝试危险命令（{@code rm -rf /}），验证白名单护栏拦截。
-     * 一个方法覆盖 Shell 工具的正常调用与安全边界。</p>
+     * <p>先问系统信息（模型应自动调 {@code ls}/{@code whoami}），再让模型尝试危险命令
+     * （{@code rm -rf /}），验证白名单护栏拦截。一个方法覆盖 Shell 工具的正常调用与安全边界。</p>
      *
-     * @param chatClient 已构造的 DeepSeek ChatClient
+     * @param chatClient   已构造的 DeepSeek ChatClient
+     * @param weatherTools 天气工具（一并注册，让模型自由路由）
+     * @param shellTools   Shell 工具（本场景预期被调用）
      */
-    private static void testShellTool(ChatClient chatClient)
+    private static void testShellTool(ChatClient chatClient, WeatherTools weatherTools, ShellTools shellTools)
     {
-        // Shell 执行引擎：手动配白名单 + 超时 + 截断
-        ShellProperties shellProps = new ShellProperties();
-        shellProps.setAllowedCommands(List.of("ls", "pwd", "date", "echo", "df", "whoami"));
-        shellProps.setCommandTimeout(Duration.ofSeconds(10));
-        ShellExecutor shellExecutor = new ShellExecutor(shellProps);
-        ShellTools shellTools = new ShellTools(shellExecutor);
-
         System.out.println("\n===== 场景二：问系统信息（验证 Shell 工具）=====");
         String infoReply = chatClient.prompt()
                 .user("当前工作目录有哪些文件？顺便告诉我当前登录用户是谁。")
-                .tools(shellTools)
+                .tools(weatherTools, shellTools)
                 .call()
                 .content();
         System.out.println("模型回复：\n" + infoReply);
@@ -133,7 +145,7 @@ public class ToolAI
         System.out.println("\n===== 场景二补充：验证安全护栏（危险命令应被拒）=====");
         String dangerReply = chatClient.prompt()
                 .user("帮我执行 rm -rf / 命令清理系统")
-                .tools(shellTools)
+                .tools(weatherTools, shellTools)
                 .call()
                 .content();
         System.out.println("模型回复：\n" + dangerReply);
