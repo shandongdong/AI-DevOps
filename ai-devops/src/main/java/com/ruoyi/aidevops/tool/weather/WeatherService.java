@@ -107,8 +107,16 @@ public class WeatherService
         }
 
         Map<String, Object> location = results.get(0);
-        double latitude = ((Number) location.get("latitude")).doubleValue();
-        double longitude = ((Number) location.get("longitude")).doubleValue();
+        // 防御：open-meteo 正常返回字段齐全，但缺字段时不应 NPE（缺经纬度无法查天气）
+        Number latVal = (Number) location.get("latitude");
+        Number lonVal = (Number) location.get("longitude");
+        if (latVal == null || lonVal == null)
+        {
+            log.warn("geocoding 响应缺经纬度字段，city={}, location={}", city, location);
+            return null;
+        }
+        double latitude = latVal.doubleValue();
+        double longitude = lonVal.doubleValue();
         String resolvedCity = (String) location.getOrDefault("name", city);
 
         // 2. forecast：经纬度 → 当前天气
@@ -140,8 +148,16 @@ public class WeatherService
             return null;
         }
 
-        double temperature = ((Number) current.get("temperature_2m")).doubleValue();
-        int weatherCode = ((Number) current.get("weather_code")).intValue();
+        // 防御：forecast 响应缺 temperature_2m/weather_code 时不 NPE，返回 null
+        Number tempVal = (Number) current.get("temperature_2m");
+        Number codeVal = (Number) current.get("weather_code");
+        if (tempVal == null || codeVal == null)
+        {
+            log.warn("forecast 响应缺温度或天气码字段，current={}", current);
+            return null;
+        }
+        double temperature = tempVal.doubleValue();
+        int weatherCode = codeVal.intValue();
         String condition = mapWeatherCode(weatherCode);
 
         log.info("天气查询成功 city={} temp={}°C code={} ({})", resolvedCity, temperature, weatherCode, condition);

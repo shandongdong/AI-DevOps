@@ -111,6 +111,7 @@ public class ShellExecutor
         {
             Thread.currentThread().interrupt();
             process.destroyForcibly();
+            closeQuietly(process.getInputStream());
             long duration = System.currentTimeMillis() - start;
             return new CommandResult("执行被中断", -1, false, false, false, duration);
         }
@@ -118,10 +119,11 @@ public class ShellExecutor
         if (timedOut)
         {
             process.destroyForcibly();
+            closeQuietly(process.getInputStream());
             long duration = System.currentTimeMillis() - start;
             log.warn("[审计] Shell 命令超时被杀 command={} timeoutMs={} durationMs={}",
                     command, properties.getCommandTimeout().toMillis(), duration);
-            return new CommandResult("命令执行超时（" + properties.getCommandTimeout().getSeconds() + "s），已被终止",
+            return new CommandResult("命令执行超时（" + properties.getCommandTimeout().toMillis() + "ms），已被终止",
                     -1, true, false, false, duration);
         }
 
@@ -220,5 +222,21 @@ public class ShellExecutor
     /** readAndTruncate 的返回值：输出文本 + 是否被截断 */
     private record ReadResult(String output, boolean truncated)
     {
+    }
+
+    /** 静默关闭流（超时/中断分支用，忽略 IO 异常） */
+    private static void closeQuietly(InputStream stream)
+    {
+        if (stream != null)
+        {
+            try
+            {
+                stream.close();
+            }
+            catch (IOException ignored)
+            {
+                // 静默关闭，超时强杀场景下流关闭异常无意义
+            }
+        }
     }
 }
