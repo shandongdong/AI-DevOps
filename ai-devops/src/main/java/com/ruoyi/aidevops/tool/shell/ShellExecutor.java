@@ -125,17 +125,15 @@ public class ShellExecutor
                     -1, true, false, false, duration);
         }
 
-        // 护栏 5：输出截断
-        String output = readAndTruncate(process.getInputStream());
+        // 护栏 5：输出截断（截断标记由 readAndTruncate 直接返回，避免用被截断后的 output 长度反推）
+        ReadResult readResult = readAndTruncate(process.getInputStream());
 
         int exitCode = process.exitValue();
         long duration = System.currentTimeMillis() - start;
-        boolean truncated = output.length() >= properties.getMaxOutputBytes()
-                || countLines(output) > properties.getMaxOutputLines();
 
         log.info("[审计] Shell 执行完成 command={} exitCode={} durationMs={} truncated={}",
-                command, exitCode, duration, truncated);
-        return new CommandResult(output, exitCode, false, truncated, false, duration);
+                command, exitCode, duration, readResult.truncated());
+        return new CommandResult(readResult.output(), exitCode, false, readResult.truncated(), false, duration);
     }
 
     /**
@@ -169,18 +167,21 @@ public class ShellExecutor
 
     /**
      * 读取输出流并按行/字节截断。
+     *
+     * <p>返回 {@link ReadResult}，把"是否截断"标记直接带出来——而不是让调用方用被截断后的
+     * output 长度反推（截断提示文字会污染长度判断）。这是截断逻辑的正确做法。</p>
      */
-    private String readAndTruncate(InputStream inputStream)
+    private ReadResult readAndTruncate(InputStream inputStream)
     {
         StringBuilder sb = new StringBuilder();
         int maxLines = properties.getMaxOutputLines();
         int maxBytes = properties.getMaxOutputBytes();
         int lineCount = 0;
+        boolean truncated = false;
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)))
         {
             String line;
-            boolean truncated = false;
             while ((line = reader.readLine()) != null)
             {
                 if (lineCount >= maxLines)
@@ -210,26 +211,14 @@ public class ShellExecutor
         catch (IOException e)
         {
             log.warn("读取命令输出失败", e);
-            return "读取输出失败：" + e.getMessage();
+            return new ReadResult("读取输出失败：" + e.getMessage(), false);
         }
 
-        return sb.toString();
+        return new ReadResult(sb.toString(), truncated);
     }
 
-    private static int countLines(String text)
+    /** readAndTruncate 的返回值：输出文本 + 是否被截断 */
+    private record ReadResult(String output, boolean truncated)
     {
-        if (text == null || text.isEmpty())
-        {
-            return 0;
-        }
-        int count = 1;
-        for (int i = 0; i < text.length(); i++)
-        {
-            if (text.charAt(i) == '\n')
-            {
-                count++;
-            }
-        }
-        return count;
     }
 }

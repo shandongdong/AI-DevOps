@@ -125,6 +125,7 @@ class ShellExecutorTest
         CommandResult result = executor.execute("seq 1 100");
 
         assertFalse(result.blocked(), "seq 在白名单不应被拒");
+        assertTrue(result.truncated(), "输出超过 3 行限制，truncated 字段应为 true");
         assertTrue(result.output().contains("截断"), "输出应被截断并提示");
     }
 

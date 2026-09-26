@@ -2,20 +2,14 @@ package com.ruoyi.aidevops;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.ai.model.deepseek.autoconfigure.DeepSeekChatAutoConfiguration;
 import org.springframework.ai.model.deepseek.autoconfigure.DeepSeekChatProperties;
 import org.springframework.ai.model.deepseek.autoconfigure.DeepSeekConnectionProperties;
 import org.springframework.ai.model.tool.DefaultToolCallingManager;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.core.retry.RetryTemplate;
-import org.springframework.web.client.ResponseErrorHandler;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import com.ruoyi.aidevops.tool.shell.ShellExecutor;
 import com.ruoyi.aidevops.tool.shell.ShellProperties;
