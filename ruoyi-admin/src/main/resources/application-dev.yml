@@ -56,6 +56,38 @@ spring:
       chat:
         model: ${DEEPSEEK_MODEL:deepseek-v4-pro}
 
+# ai-devops 工具配置（第11篇：让大模型"动手"的工具）
+# 天气查询 + Shell 命令执行两套工具，配置全外置，环境差异只改配置不改代码
+ai-devops:
+  tool:
+    # 天气查询工具（open-meteo 免费无需 key）
+    weather:
+      geocoding-api-url: https://geocoding-api.open-meteo.com/v1/search
+      forecast-api-url: https://api.open-meteo.com/v1/forecast
+      timeout: 10s
+    # Shell 命令执行工具（五重护栏：白名单 + 元字符拒绝 + 工作目录隔离 + 超时 + 截断 + 审计）
+    shell:
+      workspace-root: ${java.io.tmpdir}/ai-devops-shell
+      command-timeout: 30s
+      max-output-lines: 500
+      max-output-bytes: 65536
+      # 白名单：只放行只读/查看类命令，rm/mv/kill 等危险命令默认不放行
+      allowed-commands:
+        - ls
+        - cat
+        - pwd
+        - date
+        - df
+        - echo
+        - head
+        - tail
+        - grep
+        - find
+        - wc
+        - whoami
+        - uptime
+        - free
+
 # 日志级别（开发环境开 debug，方便调试）
 logging:
   level:

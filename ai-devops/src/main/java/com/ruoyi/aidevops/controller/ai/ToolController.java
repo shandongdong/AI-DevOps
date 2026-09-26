@@ -1,0 +1,101 @@
+package com.ruoyi.aidevops.controller.ai;
+
+import java.util.Map;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ruoyi.aidevops.tool.shell.ShellTools;
+import com.ruoyi.aidevops.tool.weather.WeatherTools;
+import com.ruoyi.common.annotation.Anonymous;
+import com.ruoyi.common.core.domain.AjaxResult;
+
+/**
+ * ai-devops 工具调用接口（多模型路由 + 工具注入）。
+ *
+ * <p>承接 {@link ChatController}（第10篇，纯对话），本接口在第10篇基础上加 {@code .tools()} 注入工具，
+ * 让模型从"动嘴"升级到"动手"——能自己决定调天气查询或 Shell 命令执行工具，拿到结果再回复。</p>
+ *
+ * <p>路由风格与 {@link ChatController} 一致：按 {@code model} 参数切换 ChatClient，默认走 Anthropic。
+ * 工具对象（{@link WeatherTools} / {@link ShellTools}）由容器注入，每个请求都注入同一组工具。</p>
+ *
+ * <p>权限：验证阶段标 {@code @Anonymous} 免登录，后续接入业务移除并配 {@code @PreAuthorize}。</p>
+ *
+ * @author shandongdong
+ * @see ChatController 第10篇纯对话接口（本接口在其基础上加工具）
+ * @see WeatherTools 天气查询工具
+ * @see ShellTools Shell 命令执行工具
+ */
+@RestController
+@RequestMapping("/aidevops/ai")
+public class ToolController
+{
+    /** 默认模型标识，未传 model 参数时走它 */
+    private static final String DEFAULT_MODEL = "anthropic";
+
+    private final ChatClient anthropicChatClient;
+    private final ChatClient deepSeekChatClient;
+    private final WeatherTools weatherTools;
+    private final ShellTools shellTools;
+
+    public ToolController(@Qualifier("anthropicChatClient") ChatClient anthropicChatClient,
+                         @Qualifier("deepSeekChatClient") ChatClient deepSeekChatClient,
+                         WeatherTools weatherTools,
+                         ShellTools shellTools)
+    {
+        this.anthropicChatClient = anthropicChatClient;
+        this.deepSeekChatClient = deepSeekChatClient;
+        this.weatherTools = weatherTools;
+        this.shellTools = shellTools;
+    }
+
+    /**
+     * 工具调用接口：接收用户消息，注入工具，返回模型回复。
+     *
+     * <p>与 {@link ChatController#chat} 的唯一区别：调用链多了 {@code .tools(weatherTools, shellTools)}。
+     * 模型据此决定是否调工具——不调工具时行为与第10篇纯对话完全一致，调工具时框架自动执行
+     * "模型决定调工具→执行→结果喂回→模型继续"的循环，调用方无需关心。</p>
+     *
+     * @param model   模型标识（query param，可选，默认 anthropic）：anthropic / deepseek
+     * @param request 包含 message 字段的请求体（复用 {@link ChatRequest}）
+     * @return AjaxResult 包含模型回复内容
+     */
+    @Anonymous
+    @PostMapping("/tool")
+    public AjaxResult tool(@RequestParam(required = false) String model,
+                           @RequestBody ChatRequest request)
+    {
+        if (request.message() == null || request.message().trim().isEmpty())
+        {
+            return AjaxResult.error("消息内容不能为空");
+        }
+        try
+        {
+            String resolvedModel = (model == null || model.isBlank())
+                    ? DEFAULT_MODEL : model.toLowerCase();
+            ChatClient client = switch (resolvedModel)
+            {
+                case "anthropic" -> anthropicChatClient;
+                case "deepseek" -> deepSeekChatClient;
+                default -> throw new IllegalArgumentException(
+                        "不支持的模型: " + model + "，支持: anthropic, deepseek");
+            };
+            // 与 ChatController 的唯一区别：注入工具，让模型能"动手"
+            String reply = client.prompt()
+                    .user(request.message())
+                    .tools(weatherTools, shellTools)
+                    .call()
+                    .content();
+            return AjaxResult.success(Map.of("reply", reply, "model", resolvedModel));
+        }
+        catch (Exception e)
+        {
+            return AjaxResult.error("工具调用失败：" + e.getMessage());
+        }
+    }
+}
