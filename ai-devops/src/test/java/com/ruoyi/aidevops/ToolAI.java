@@ -50,7 +50,29 @@ public class ToolAI
         ShellExecutor shellExecutor = new ShellExecutor(shellProps);
         ShellTools shellTools = new ShellTools(shellExecutor);
 
-        // 2. 手动构造 DeepSeekChatModel（沿用 HelloAI 套路）
+        // 2. 手动构造 ChatClient（DeepSeek 链路，沿用 HelloAI 套路）
+        ChatClient chatClient = createChatClient();
+
+        // 3. 分别验证两个场景，各自独立、可单独注释调试
+        testWeatherTool(chatClient, weatherTools, shellTools);
+        testShellTool(chatClient, weatherTools, shellTools);
+
+        System.out.println("\n===== 验证结束 =====");
+        System.out.println("================================================");
+    }
+
+    /**
+     * 手动构造 DeepSeek ChatClient（绕开 Spring 容器，沿用 HelloAI 套路）。
+     *
+     * <p>从环境变量 {@code DEEPSEEK_API_KEY} 取凭据，手动 new 连接/对话属性，
+     * 调 {@code DeepSeekChatAutoConfiguration} 工厂方法拿 {@link DeepSeekChatModel}，
+     * 再用 {@link ChatClient#create} 包一层。与 {@link HelloAI} 的区别仅在于
+     * 工具调用管理器——这里用默认实现（非空占位），因为本类要真正执行工具。</p>
+     *
+     * @return 绑定 DeepSeek 模型的 ChatClient
+     */
+    private static ChatClient createChatClient()
+    {
         String apiKey = System.getenv("DEEPSEEK_API_KEY");
         DeepSeekConnectionProperties conn = new DeepSeekConnectionProperties();
         conn.setApiKey(apiKey);
@@ -69,14 +91,7 @@ public class ToolAI
                 toolCallingManager,
                 emptyProvider(), emptyProvider(), emptyProvider(), emptyProvider());
 
-        ChatClient chatClient = ChatClient.create(chatModel);
-
-        // 3. 分别验证两个场景，各自独立、可单独注释调试
-        testWeatherTool(chatClient, weatherTools, shellTools);
-        testShellTool(chatClient, weatherTools, shellTools);
-
-        System.out.println("\n===== 验证结束 =====");
-        System.out.println("================================================");
+        return ChatClient.create(chatModel);
     }
 
     /**
