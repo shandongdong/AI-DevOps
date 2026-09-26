@@ -45,7 +45,7 @@ public class ToolAI
 
         // Shell 执行引擎：手动配白名单 + 超时 + 截断
         ShellProperties shellProps = new ShellProperties();
-        shellProps.setAllowedCommands(List.of("ls", "pwd", "date", "echo", "df", "whoami"));
+        shellProps.setAllowedCommands(List.of("ls", "pwd", "date", "echo", "df", "whoami", "cat", "less"));
         shellProps.setCommandTimeout(Duration.ofSeconds(10));
         ShellExecutor shellExecutor = new ShellExecutor(shellProps);
         ShellTools shellTools = new ShellTools(shellExecutor);
@@ -149,6 +149,14 @@ public class ToolAI
                 .call()
                 .content();
         System.out.println("模型回复：\n" + dangerReply);
+
+        System.out.println("\n===== 场景二补充：验证查看文件=====");
+        String catFile = chatClient.prompt()
+                .user("帮我执行 cat ~/Downloads/prompt.txt 查看文件内容")
+                .tools(weatherTools, shellTools)
+                .call()
+                .content();
+        System.out.println("模型回复：\n" + catFile);
     }
 
     /** 返回一个"空" ObjectProvider（沿用 HelloAI 实现） */
