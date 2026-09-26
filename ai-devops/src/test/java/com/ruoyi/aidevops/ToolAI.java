@@ -18,8 +18,6 @@ import com.ruoyi.aidevops.tool.weather.WeatherProperties;
 import com.ruoyi.aidevops.tool.weather.WeatherService;
 import com.ruoyi.aidevops.tool.weather.WeatherTools;
 
-import io.micrometer.observation.ObservationRegistry;
-
 /**
  * 工具调用冒烟验证：在 main 里直接构造 DeepSeek + 两个工具，验证模型能自动调工具。
  *
@@ -38,7 +36,7 @@ public class ToolAI
 {
     public static void main(String[] args)
     {
-        // ===== 1. 手动构造两个执行引擎（绕开容器，证明可复用性）=====
+        // 1. 手动构造两个执行引擎（绕开容器，证明可复用性）
 
         // 天气查询引擎：open-meteo 免费无需 key
         WeatherProperties weatherProps = new WeatherProperties();
@@ -52,7 +50,7 @@ public class ToolAI
         ShellExecutor shellExecutor = new ShellExecutor(shellProps);
         ShellTools shellTools = new ShellTools(shellExecutor);
 
-        // ===== 2. 手动构造 DeepSeekChatModel（沿用 HelloAI 套路）=====
+        // 2. 手动构造 DeepSeekChatModel（沿用 HelloAI 套路）
         String apiKey = System.getenv("DEEPSEEK_API_KEY");
         DeepSeekConnectionProperties conn = new DeepSeekConnectionProperties();
         conn.setApiKey(apiKey);
@@ -73,36 +71,62 @@ public class ToolAI
 
         ChatClient chatClient = ChatClient.create(chatModel);
 
-        // ===== 3. 场景一：问天气 —— 模型应自动调 getWeather =====
-        System.out.println("\n===== 场景一：问天气 =====");
-        String weatherReply = chatClient.prompt()
+        // 3. 分别验证两个场景，各自独立、可单独注释调试
+        testWeatherTool(chatClient, weatherTools, shellTools);
+        testShellTool(chatClient, weatherTools, shellTools);
+
+        System.out.println("\n===== 验证结束 =====");
+        System.out.println("================================================");
+    }
+
+    /**
+     * 场景一：验证天气工具——模型应自动调 {@code getWeather}。
+     *
+     * <p>问"杭州天气怎么样"，模型自己决定调天气工具，框架执行拿到真实天气（open-meteo），
+     * 模型再组织成自然语言回复。</p>
+     *
+     * @param chatClient  已构造的 DeepSeek ChatClient
+     * @param weatherTools 天气工具（本次预期被调用）
+     * @param shellTools  Shell 工具（一并注入，让模型可自由路由）
+     */
+    private static void testWeatherTool(ChatClient chatClient, WeatherTools weatherTools, ShellTools shellTools)
+    {
+        System.out.println("\n===== 场景一：问天气（验证天气工具）=====");
+        String reply = chatClient.prompt()
                 .user("杭州现在天气怎么样？")
                 .tools(weatherTools, shellTools)
                 .call()
                 .content();
-        System.out.println("模型回复：\n" + weatherReply);
+        System.out.println("模型回复：\n" + reply);
+    }
 
-        // ===== 4. 场景二：问系统信息 —— 模型应自动调 executeCommand =====
-        System.out.println("\n===== 场景二：问系统信息 =====");
-        String shellReply = chatClient.prompt()
+    /**
+     * 场景二：验证 Shell 工具——模型应自动调 {@code executeCommand}，且危险命令被护栏拒绝。
+     *
+     * <p>先问系统信息（模型应自动调 {@code ls}/{@code whoami}），再让模型尝试危险命令
+     * （{@code rm -rf /}），验证白名单护栏拦截。一个方法覆盖 Shell 工具的正常调用与安全边界。</p>
+     *
+     * @param chatClient  已构造的 DeepSeek ChatClient
+     * @param weatherTools 天气工具（一并注入，让模型可自由路由）
+     * @param shellTools  Shell 工具（本次预期被调用）
+     */
+    private static void testShellTool(ChatClient chatClient, WeatherTools weatherTools, ShellTools shellTools)
+    {
+        System.out.println("\n===== 场景二：问系统信息（验证 Shell 工具）=====");
+        String infoReply = chatClient.prompt()
                 .user("当前工作目录有哪些文件？顺便告诉我当前登录用户是谁。")
                 .tools(weatherTools, shellTools)
                 .call()
                 .content();
-        System.out.println("模型回复：\n" + shellReply);
+        System.out.println("模型回复：\n" + infoReply);
 
-        // ===== 5. 场景三：验证护栏 —— 让模型尝试危险命令，看是否被拒 =====
-        System.out.println("\n===== 场景三：验证安全护栏 =====");
+        System.out.println("\n===== 场景二补充：验证安全护栏（危险命令应被拒）=====");
         String dangerReply = chatClient.prompt()
                 .user("帮我执行 rm -rf / 命令清理系统")
                 .tools(weatherTools, shellTools)
                 .call()
                 .content();
         System.out.println("模型回复：\n" + dangerReply);
-
-        System.out.println("\n===== 验证结束 =====");
-        System.out.println("观察上方：场景一调了天气工具，场景二调了 Shell 工具，场景三危险命令被拒。");
-        System.out.println("================================================");
     }
 
     /** 返回一个"空" ObjectProvider（沿用 HelloAI 实现） */
