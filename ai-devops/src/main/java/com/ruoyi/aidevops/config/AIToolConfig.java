@@ -25,11 +25,11 @@ import com.ruoyi.aidevops.tool.weather.WeatherTools;
  * 此后 Service/Tools bean 通过构造注入拿到配置。</p>
  *
  * @author shandongdong
- * @see com.ruoyi.aidevops.controller.ai.ToolController 工具调用入口
+ * @see com.ruoyi.aidevops.controller.ai.AIToolController 工具调用入口
  */
 @Configuration
 @EnableConfigurationProperties({ WeatherProperties.class, ShellProperties.class })
-public class ToolConfig
+public class AIToolConfig
 {
     /** 天气查询执行引擎 */
     @Bean

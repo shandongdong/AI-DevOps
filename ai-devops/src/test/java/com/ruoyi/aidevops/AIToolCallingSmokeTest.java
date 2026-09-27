@@ -32,7 +32,7 @@ import com.ruoyi.aidevops.tool.weather.WeatherTools;
  *
  * @author shandongdong
  */
-public class ToolAI
+public class AIToolCallingSmokeTest
 {
     public static void main(String[] args)
     {

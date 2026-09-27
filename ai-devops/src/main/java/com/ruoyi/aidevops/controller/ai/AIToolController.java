@@ -33,7 +33,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
  */
 @RestController
 @RequestMapping("/aidevops/ai")
-public class ToolController
+public class AIToolController
 {
     /** 默认模型标识，未传 model 参数时走它 */
     private static final String DEFAULT_MODEL = "anthropic";
@@ -43,7 +43,7 @@ public class ToolController
     private final WeatherTools weatherTools;
     private final ShellTools shellTools;
 
-    public ToolController(@Qualifier("anthropicChatClient") ChatClient anthropicChatClient,
+    public AIToolController(@Qualifier("anthropicChatClient") ChatClient anthropicChatClient,
                          @Qualifier("deepSeekChatClient") ChatClient deepSeekChatClient,
                          WeatherTools weatherTools,
                          ShellTools shellTools)
