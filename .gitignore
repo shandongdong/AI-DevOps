@@ -49,3 +49,7 @@ nbdist/
 !*/build/*.java
 !*/build/*.html
 !*/build/*.xml
+
+# MCP 实跑产物（第12篇）
+.playwright-mcp/
+example-com.png

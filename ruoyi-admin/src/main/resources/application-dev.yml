@@ -55,6 +55,33 @@ spring:
       base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
       chat:
         model: ${DEEPSEEK_MODEL:deepseek-v4-pro}
+    # MCP 客户端配置（第12篇：连外部 MCP server 调其工具）
+    # 一个 client 可连多个 server（stdio + streamable-http 并存），框架自动桥接成 ToolCallbackProvider bean
+    mcp:
+      client:
+        enabled: true
+        # 同步客户端：简单直观，main/接口都能直接用。ASYNC 为异步（返回 Flux），适合响应式栈
+        type: SYNC
+        # MCP 工具调用超时——浏览器操作/远程文档可能慢，给足 60s
+        request-timeout: 60s
+        # toolcallback.enabled 默认 true：自动造 SyncMcpToolCallbackProvider bean（ToolCallbackProvider），
+        # 含所有 connections 配的 server 工具，可直接注入到 ChatClient.tools()
+        # stdio 传输：client 起 server 子进程，靠标准输入输出通信。本地零网络配置。
+        # Playwright MCP：浏览器自动化，模型自主调 browser_navigate/click/screenshot 等
+        stdio:
+          connections:
+            playwright:
+              command: npx
+              args:
+                - "@playwright/mcp@latest"
+        # streamable-http 传输：连远程 MCP server（HTTP）。
+        # 钉钉云文档 MCP：操作文档，凭据 key 走环境变量 DINGTALK_MCP_KEY（绝不入库）
+        streamable-http:
+          connections:
+            dingtalk-doc:
+              # key 用环境变量占位：未设时整段 url 含字面 ${DINGTALK_MCP_KEY}，钉钉会拒，安全失败优于明文
+              url: https://mcp-gw.dingtalk.com/server/a941bf4a3ad3834bb954063a548f5dc925adeec6fdaaa08f38b0f9bedf8fea27?key=${DINGTALK_MCP_KEY}
+              endpoint: /mcp
 
 # ai-devops 工具配置（第11篇：让大模型"动手"的工具）
 # 天气查询 + Shell 命令执行两套工具，配置全外置，环境差异只改配置不改代码

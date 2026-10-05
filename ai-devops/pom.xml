@@ -35,6 +35,14 @@
             <artifactId>spring-ai-starter-model-deepseek</artifactId>
         </dependency>
 
+        <!-- Spring AI MCP 客户端（连外部 MCP server 调其工具，第12篇）。
+             注意：MCP 子模块版本与 Spring AI 主版本解耦——
+             Spring AI 2.0.1 BOM 管理的 spring-ai-mcp 是 1.1.2（不是 2.0.1），实测确认。 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+
         <!-- Flyway 数据库版本管理（版本由 Spring Boot BOM 管理，无需写 version）-->
         <dependency>
             <groupId>org.flywaydb</groupId>
