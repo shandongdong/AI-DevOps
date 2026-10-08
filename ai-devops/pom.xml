@@ -36,11 +36,19 @@
         </dependency>
 
         <!-- Spring AI MCP 客户端（连外部 MCP server 调其工具，第12篇）。
-             注意：MCP 子模块版本与 Spring AI 主版本解耦——
-             Spring AI 2.0.1 BOM 管理的 spring-ai-mcp 是 1.1.2（不是 2.0.1），实测确认。 -->
+             MCP 子模块版本 = 2.0.1（与 Spring AI 主版本同版本，非解耦，mvn dependency:tree 实测确认） -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+
+        <!-- Spring AI MCP 服务端（把自己的 @Tool 工具暴露成 MCP server，第13篇）。
+             项目是 servlet 栈（spring-boot-starter-web），用 webmvc 不是 webflux——
+             classpath 有 DispatcherServlet 时 Boot 优先 webmvc。
+             MCP 子模块版本 = 2.0.1（与 client 端同版本，由 spring-ai-bom 管理）。 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
         </dependency>
 
         <!-- Flyway 数据库版本管理（版本由 Spring Boot BOM 管理，无需写 version）-->

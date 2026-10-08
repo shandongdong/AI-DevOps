@@ -82,6 +82,22 @@ spring:
               # key 用环境变量占位：未设时整段 url 含字面 ${DINGTALK_MCP_KEY}，钉钉会拒，安全失败优于明文
               url: https://mcp-gw.dingtalk.com/server/a941bf4a3ad3834bb954063a548f5dc925adeec6fdaaa08f38b0f9bedf8fea27?key=${DINGTALK_MCP_KEY}
               endpoint: /mcp
+      # MCP 服务端配置（第13篇：把自己的 @Tool 工具暴露成 MCP server，让外部 client 连）
+      # 框架自动把容器里的 ToolCallbackProvider/ToolCallback bean 桥接成 MCP 工具规格并暴露
+      server:
+        name: ai-devops-mcp-server
+        version: 1.0.0
+        # 同步 server：简单直观，与 client 端 type=SYNC 对称。ASYNC 为异步（返回 Flux），适合响应式栈
+        type: SYNC
+        # streamable 协议（MCP 2025-03 规范）：单端点 /mcp，比 sse（已废弃的双端点）更现代
+        # client 配 url: http://host:8080/mcp 连过来
+        protocol: STREAMABLE
+        # streamable-http.mcp-endpoint 默认 /mcp，可省略
+        capabilities:
+          tool: true   # 暴露工具能力（默认 true），把容器里的 @Tool 工具暴露给外部 client
+        # 工具变更通知：声明 listChanged 能力，运行时 addTool/removeTool 后调 notifyToolsListChanged() 通知 client 重拉
+        tool-change-notification: true
+        # annotation-scanner.enabled 默认 true：扫 @McpTool 注解（本篇用 @Tool 复用路径，不依赖此扫描）
 
 # ai-devops 工具配置（第11篇：让大模型"动手"的工具）
 # 天气查询 + Shell 命令执行两套工具，配置全外置，环境差异只改配置不改代码
