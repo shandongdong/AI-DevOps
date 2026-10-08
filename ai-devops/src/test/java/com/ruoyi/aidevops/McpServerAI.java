@@ -2,6 +2,7 @@ package com.ruoyi.aidevops;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import org.springframework.ai.mcp.McpToolUtils;
 import org.springframework.ai.support.ToolCallbacks;
@@ -78,16 +79,22 @@ public class McpServerAI
                 + McpServerAI.class.getName());
 
         // 5. 阻塞等 client（stdio server 靠 System.in/out 通信，主线程不能退出）
-        //    按 Ctrl+C 退出，runtime.addShutdownHook 关 server
+        //    ⚠️ 不能用 Thread.currentThread().join()——线程 join 自己会永远阻塞
+        //    （join() 内部调 wait() 等自己终止，永远不会被 notify），且 Ctrl+C 进
+        //    shutdown hook 后 main 线程仍卡在 join() 里下不来。改用 CountDownLatch：
+        //    main 线程 await() 阻塞，shutdown hook 里 countDown() 唤醒后正常退出。
+        //    按 Ctrl+C 退出，runtime.addShutdownHook 关 server + 唤醒主线程（修复死循环 #8）。
+        CountDownLatch shutdownLatch = new CountDownLatch(1);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\n关闭 MCP server...");
             server.close();
+            shutdownLatch.countDown();   // 唤醒主线程，让它能正常退出
         }));
 
-        // 主线程阻塞，等 stdin EOF（client 断开）或 Ctrl+C
+        // 主线程阻塞，等 shutdown hook 唤醒（Ctrl+C）或被 interrupt
         try
         {
-            Thread.currentThread().join();
+            shutdownLatch.await();
         }
         catch (InterruptedException e)
         {

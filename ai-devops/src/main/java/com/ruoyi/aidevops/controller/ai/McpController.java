@@ -1,5 +1,6 @@
 package com.ruoyi.aidevops.controller.ai;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.ai.chat.client.ChatClient;
@@ -66,7 +67,12 @@ public class McpController
                          @Qualifier("deepSeekChatClient") ChatClient deepSeekChatClient,
                          WeatherTools weatherTools,
                          ShellTools shellTools,
-                         ToolCallbackProvider mcpToolCallbackProvider)
+                         // 第13篇新增 aiDevopsToolCallbacks（含本地天气/Shell）后，容器里有两个
+                         // ToolCallbackProvider bean：mcpToolCallbacks（client 端 autoconfig 造，含
+                         // Playwright/钉钉等外部 MCP server 工具）+ aiDevopsToolCallbacks（第13篇造）。
+                         // 按类型注入会 NoUniqueBeanDefinitionException，必须 @Qualifier 明确要哪个。
+                         // 本接口要调外部 MCP server 工具，故注入 mcpToolCallbacks。
+                         @Qualifier("mcpToolCallbacks") ToolCallbackProvider mcpToolCallbackProvider)
     {
         this.anthropicChatClient = anthropicChatClient;
         this.deepSeekChatClient = deepSeekChatClient;
@@ -115,7 +121,11 @@ public class McpController
                     .tools(weatherTools, shellTools, mcpToolCallbackProvider)
                     .call()
                     .content();
-            return AjaxResult.success(Map.of("reply", reply, "model", resolvedModel));
+            // Map.of 不接受 null value：模型无回复时 .content() 返回 null，直接 Map.of 会 NPE，故判空兜底
+            Map<String, Object> data = new HashMap<>();
+            data.put("reply", reply == null ? "" : reply);
+            data.put("model", resolvedModel);
+            return AjaxResult.success(data);
         }
         catch (Exception e)
         {

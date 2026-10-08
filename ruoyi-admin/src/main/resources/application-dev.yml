@@ -64,6 +64,13 @@ spring:
         type: SYNC
         # MCP 工具调用超时——浏览器操作/远程文档可能慢，给足 60s
         request-timeout: 60s
+        # initialized=false：MCP client 创建时不立即 initialize() 握手（lazy）。
+        # 钉钉云文档 MCP 凭据 key 走环境变量 DINGTALK_MCP_KEY，未设时连接会失败——
+        # 若启动期 eager 握手（initialized=true 默认），dingtalk 连接失败会让 mcpSyncClients
+        # bean 创建失败，整个应用启动崩溃。改 lazy 后 client bean 创建成功（不崩应用），
+        # 运行时第一次调用该 server 工具时才握手，失败只影响那次调用。
+        # 副作用：Playwright 也变 lazy，第一次调用稍慢（需先握手），可接受。
+        initialized: false
         # toolcallback.enabled 默认 true：自动造 SyncMcpToolCallbackProvider bean（ToolCallbackProvider），
         # 含所有 connections 配的 server 工具，可直接注入到 ChatClient.tools()
         # stdio 传输：client 起 server 子进程，靠标准输入输出通信。本地零网络配置。
@@ -79,9 +86,16 @@ spring:
         streamable-http:
           connections:
             dingtalk-doc:
-              # key 用环境变量占位：未设时整段 url 含字面 ${DINGTALK_MCP_KEY}，钉钉会拒，安全失败优于明文
-              url: https://mcp-gw.dingtalk.com/server/a941bf4a3ad3834bb954063a548f5dc925adeec6fdaaa08f38b0f9bedf8fea27?key=${DINGTALK_MCP_KEY}
-              endpoint: /mcp
+              # ⚠️ url + endpoint 拼接规则（反编译 Utils.resolveUri 确认）：
+              # 框架调 baseUri.resolve(endpoint) 拼最终请求 URL。
+              # - endpoint 为相对路径（如 /mcp）会【替换】baseUri 的 path+query，
+              #   导致 token 和 key 全丢 → 钉钉 404/401。不能写 endpoint: /mcp。
+              # - endpoint 为绝对 URL（含 scheme）会走 isUnderBaseUri 校验后整体替换 baseUri，
+              #   只要 base 只到 host、endpoint 含完整 path+token+key 就能正确拼接。
+              # 所以这里 url 只到 host，token+key 全放 endpoint（绝对 URL），与第12篇注释的"拼 url"修法不同。
+              # key 走环境变量，未设时用空默认值：url 含空 key，钉钉拒连返回 401，应用正常启动（client 连接失败不影响应用）
+              url: https://mcp-gw.dingtalk.com
+              endpoint: https://mcp-gw.dingtalk.com/server/a941bf4a3ad3834bb954063a548f5dc925adeec6fdaaa08f38b0f9bedf8fea27?key=${DINGTALK_MCP_KEY:}
       # MCP 服务端配置（第13篇：把自己的 @Tool 工具暴露成 MCP server，让外部 client 连）
       # 框架自动把容器里的 ToolCallbackProvider/ToolCallback bean 桥接成 MCP 工具规格并暴露
       server:

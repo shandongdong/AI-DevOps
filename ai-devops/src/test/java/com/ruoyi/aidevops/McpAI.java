@@ -29,12 +29,12 @@ import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapperSupplier;
 /**
  * MCP（Model Context Protocol）工具调用冒烟验证：连外部 MCP server 调其工具。
  *
- * <p>承接 {@link ToolAI}（第11篇，自写 @Tool 工具），本类演示第12篇的核心——
+ * <p>承接 {@link AIToolCallingSmokeTest}（第11篇，自写 @Tool 工具），本类演示第12篇的核心——
  * <b>连外部 MCP server 调其工具</b>，而不是自己写工具。</p>
  *
  * <p>核心差异：</p>
  * <ul>
- *   <li>第11篇 {@link ToolAI}：自己写 {@code @Tool} 方法（WeatherTools/ShellTools），工具逻辑跑在本进程。</li>
+ *   <li>第11篇 {@link AIToolCallingSmokeTest}：自己写 {@code @Tool} 方法（WeatherTools/ShellTools），工具逻辑跑在本进程。</li>
  *   <li>本篇：连外部 MCP server（Playwright MCP），工具逻辑跑在 MCP server 子进程里，
  *       本侧只做"桥接"——把 MCP server 的工具转成 Spring AI 的 {@code ToolCallback}。</li>
  * </ul>
@@ -62,28 +62,37 @@ public class McpAI
 
         // 2. 手动构造 MCP 客户端，连 Playwright MCP server（stdio 传输）
         //    这是本篇的核心——连外部 MCP server，复用其工具，而不是自己写
-        McpSyncClient playwrightMcp = createStdioMcpClient(
-                "npx", List.of("@playwright/mcp@latest"));
-
-        // 3. 桥接：McpSyncClient → ToolCallbackProvider
-        //    SyncMcpToolCallbackProvider 实现 ToolCallbackProvider，getToolCallbacks() 返回 ToolCallback[]
-        //    含 Playwright MCP server 暴露的全部工具（browser_navigate/click/screenshot 等）
-        SyncMcpToolCallbackProvider mcpTools = new SyncMcpToolCallbackProvider(List.of(playwrightMcp));
-
-        // 4. 手动构造 ChatClient（DeepSeek 链路，沿用 ToolAI 套路）
-        ChatClient chatClient = createChatClient();
-
-        // 5. 集中注册：本地工具 + MCP 工具并存，模型自主路由全部工具
-        //    呼应第11篇 6.2 集中注册最佳实践——路由决策交给模型，不是我们替它选
+        //    ⚠️ createStdioMcpClient 会起 npx 子进程，必须放进 try 块——若构造失败
+        //    （如 npx 不存在/握手失败），playwrightMcp 赋值前就抛异常，原写在 try 外
+        //    会导致 finally 里 close() NPE，且已起的子进程泄漏。移进 try 后异常时
+        //    playwrightMcp=null，finally 判空 close（修复资源泄漏 #6/#7）。
+        McpSyncClient playwrightMcp = null;
         try
         {
+            playwrightMcp = createStdioMcpClient(
+                    "npx", List.of("@playwright/mcp@latest"));
+
+            // 3. 桥接：McpSyncClient → ToolCallbackProvider
+            //    SyncMcpToolCallbackProvider 实现 ToolCallbackProvider，getToolCallbacks() 返回 ToolCallback[]
+            //    含 Playwright MCP server 暴露的全部工具（browser_navigate/click/screenshot 等）
+            SyncMcpToolCallbackProvider mcpTools = new SyncMcpToolCallbackProvider(List.of(playwrightMcp));
+
+            // 4. 手动构造 ChatClient（DeepSeek 链路，沿用 AIToolCallingSmokeTest 套路）
+            ChatClient chatClient = createChatClient();
+
+            // 5. 集中注册：本地工具 + MCP 工具并存，模型自主路由全部工具
+            //    呼应第11篇 6.2 集中注册最佳实践——路由决策交给模型，不是我们替它选
             testLocalToolWithMcp(chatClient, weatherTools, shellTools, mcpTools);
             testPlaywrightMcp(chatClient, weatherTools, shellTools, mcpTools);
         }
         finally
         {
-            // McpSyncClient 实现了 AutoCloseable，用完必须 close——否则子进程（npx）会残留
-            playwrightMcp.close();
+            // McpSyncClient 实现了 AutoCloseable，用完必须 close——否则子进程（npx）会残留。
+            // 判空 close：createStdioMcpClient 抛异常时 playwrightMcp 仍为 null，直接 close 会 NPE。
+            if (playwrightMcp != null)
+            {
+                playwrightMcp.close();
+            }
         }
 
         System.out.println("\n===== 验证结束 =====");
@@ -131,7 +140,7 @@ public class McpAI
     }
 
     /**
-     * 手动构造 DeepSeek ChatClient（绕开 Spring 容器，沿用 ToolAI/HelloAI 套路）。
+     * 手动构造 DeepSeek ChatClient（绕开 Spring 容器，沿用 AIToolCallingSmokeTest/HelloAI 套路）。
      *
      * @return 绑定 DeepSeek 模型的 ChatClient
      */
