@@ -3,6 +3,8 @@ package com.ruoyi.aidevops.controller.ai;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,6 +47,8 @@ import com.ruoyi.common.core.domain.AjaxResult;
 @RequestMapping("/aidevops/ai")
 public class McpController
 {
+    private static final Logger log = LoggerFactory.getLogger(McpController.class);
+
     /** 默认模型标识，未传 model 参数时走它 */
     private static final String DEFAULT_MODEL = "anthropic";
 
@@ -129,6 +133,9 @@ public class McpController
         }
         catch (Exception e)
         {
+            // 打印完整异常栈定位根因——MCP SDK 的异常链深层原因常被 getMessage() 吞掉
+            // （如"Client failed to initialize listing tools"只说"列表工具失败"，不说是哪个 client、什么错）
+            log.error("[MCP] 工具调用失败，完整异常栈：", e);
             return AjaxResult.error("MCP 工具调用失败：" + e.getMessage());
         }
     }

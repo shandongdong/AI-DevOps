@@ -53,3 +53,6 @@ nbdist/
 # MCP 实跑产物（第12篇）
 .playwright-mcp/
 example-com.png
+
+# 本地环境变量（IDE envFile 引用，凭据不入库）
+.env

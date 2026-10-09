@@ -21,6 +21,7 @@ import com.ruoyi.aidevops.tool.weather.WeatherTools;
 
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.json.McpJsonMapper;
@@ -54,28 +55,46 @@ public class McpAI
     {
         // 1. 手动构造第11篇的本地工具（天气 + Shell），与 MCP 工具并存注册
         WeatherTools weatherTools = new WeatherTools(new WeatherService(new WeatherProperties()));
-
-        ShellProperties shellProps = new ShellProperties();
-        shellProps.setAllowedCommands(List.of("ls", "pwd", "date", "echo", "df", "whoami"));
-        shellProps.setCommandTimeout(Duration.ofSeconds(10));
-        ShellTools shellTools = new ShellTools(new ShellExecutor(shellProps));
+        ShellTools shellTools = new ShellTools(new ShellExecutor(new ShellProperties()));
 
         // 2. 手动构造 MCP 客户端，连 Playwright MCP server（stdio 传输）
         //    这是本篇的核心——连外部 MCP server，复用其工具，而不是自己写
-        //    ⚠️ createStdioMcpClient 会起 npx 子进程，必须放进 try 块——若构造失败
+        //    createStdioMcpClient 会起 npx 子进程，必须放进 try 块——若构造失败
         //    （如 npx 不存在/握手失败），playwrightMcp 赋值前就抛异常，原写在 try 外
         //    会导致 finally 里 close() NPE，且已起的子进程泄漏。移进 try 后异常时
         //    playwrightMcp=null，finally 判空 close（修复资源泄漏 #6/#7）。
         McpSyncClient playwrightMcp = null;
+        // 钉钉 MCP 客户端（streamable-http 传输），与 Playwright 的 stdio 形成两种传输对称演示。
+        // key 未设时跳过钉钉场景——读者无 key 也能跑 main 看 Playwright 链路，设了才补跑钉钉。
+        McpSyncClient dingtalkMcp = null;
         try
         {
             playwrightMcp = createStdioMcpClient(
                     "npx", List.of("@playwright/mcp@latest"));
 
+            // 钉钉 MCP key 走环境变量 DINGTALK_MCP_KEY（绝不入库，与 application-dev.yml 同源）。
+            // 未设时跳过钉钉场景，只跑 Playwright——main 不强依赖钉钉凭据。
+            String dingtalkKey = System.getenv("DINGTALK_MCP_KEY");
+            boolean hasDingtalk = dingtalkKey != null && !dingtalkKey.isBlank();
+
             // 3. 桥接：McpSyncClient → ToolCallbackProvider
             //    SyncMcpToolCallbackProvider 实现 ToolCallbackProvider，getToolCallbacks() 返回 ToolCallback[]
             //    含 Playwright MCP server 暴露的全部工具（browser_navigate/click/screenshot 等）
-            SyncMcpToolCallbackProvider mcpTools = new SyncMcpToolCallbackProvider(List.of(playwrightMcp));
+            //    钉钉场景把 dingtalkMcp 也加进同一个 provider，模型自主路由 stdio + HTTP 两路工具
+            List<McpSyncClient> mcpClients = new java.util.ArrayList<>(List.of(playwrightMcp));
+            if (hasDingtalk)
+            {
+                dingtalkMcp = createStreamableHttpMcpClient(
+                        "https://mcp-gw.dingtalk.com",
+                        "https://mcp-gw.dingtalk.com/server/a941bf4a3ad3834bb954063a548f5dc925adeec6fdaaa08f38b0f9bedf8fea27?key="
+                                + dingtalkKey);
+                mcpClients.add(dingtalkMcp);
+            }
+            else
+            {
+                System.out.println("[提示] 未设 DINGTALK_MCP_KEY，跳过钉钉场景（只跑 Playwright）");
+            }
+            SyncMcpToolCallbackProvider mcpTools = new SyncMcpToolCallbackProvider(mcpClients);
 
             // 4. 手动构造 ChatClient（DeepSeek 链路，沿用 AIToolCallingSmokeTest 套路）
             ChatClient chatClient = createChatClient();
@@ -84,6 +103,10 @@ public class McpAI
             //    呼应第11篇 6.2 集中注册最佳实践——路由决策交给模型，不是我们替它选
             testLocalToolWithMcp(chatClient, weatherTools, shellTools, mcpTools);
             testPlaywrightMcp(chatClient, weatherTools, shellTools, mcpTools);
+            if (hasDingtalk)
+            {
+                testDingtalkMcp(chatClient, weatherTools, shellTools, mcpTools);
+            }
         }
         finally
         {
@@ -92,6 +115,11 @@ public class McpAI
             if (playwrightMcp != null)
             {
                 playwrightMcp.close();
+            }
+            // 钉钉是 HTTP 连接，close 释放底层 HttpClient。同样判空——key 未设或构造失败时不 close。
+            if (dingtalkMcp != null)
+            {
+                dingtalkMcp.close();
             }
         }
 
@@ -135,6 +163,53 @@ public class McpAI
                 .build();
 
         // 4. 与 server 握手——必须调，否则 listTools/callTool 全失败
+        mcpClient.initialize();
+        return mcpClient;
+    }
+
+    /**
+     * 手动构造 streamable-http 传输的 MCP 客户端——连一个用 HTTP 暴露的远程 MCP server。
+     *
+     * <p>与 {@link #createStdioMcpClient(String, List)} 形成两种传输的对称演示：
+     * stdio 连本地子进程（Playwright），streamable-http 连远程服务（钉钉）。
+     * transport 类不同，但后续 3 步（造 McpSyncClient → initialize → 桥接）完全一致——
+     * 这正是 MCP 协议分层的好处：传输层换，上层不动。</p>
+     *
+     * <p>streamable-http 传输链路（4 步，与 stdio 对称）：</p>
+     * <ol>
+     *   <li>{@link HttpClientStreamableHttpTransport#builder(String)}：传 baseUri 拿 builder，
+     *       baseUri 只到 host（scheme+host），不能含 path/query——否则 {@code Utils.resolveUri} 拼 endpoint 时会出错</li>
+     *   <li>{@code .endpoint(url)}：配完整请求 URL（含 path+token+key），与 yml 里
+     *       {@code streamable-http.connections.dingtalk-doc.url + endpoint} 同源。
+     *       ⚠️ endpoint 必须是绝对 URL：相对路径（如 /mcp）会触发
+     *       {@code baseUri.resolve(endpoint)} 替换掉 baseUri 的 path+query，token+key 全丢</li>
+     *   <li>{@code .jsonMapper(mapper)}：复用同一个 Jackson3 McpJsonMapper 序列化 JSON-RPC</li>
+     *   <li>{@code .build()} → 包进 {@link McpClient#sync} → {@code initialize()} 握手（与 stdio 一致）</li>
+     * </ol>
+     *
+     * <p>接口环境（容器内）这些全由 {@code McpClientAutoConfiguration} 自动造——配 yml 就行。
+     * 本方法展示手动构造链路，让读者看清 streamable-http 客户端的每一层。</p>
+     *
+     * @param baseUri  只到 host 的基础 URL（如 {@code https://mcp-gw.dingtalk.com}）
+     * @param endpoint 完整请求 URL，含 path+token+key（钉钉的鉴权凭据全嵌在 URL 里）
+     * @return 已握手的 McpSyncClient，用完必须 close
+     */
+    private static McpSyncClient createStreamableHttpMcpClient(String baseUri, String endpoint)
+    {
+        // 1. 造 streamable-http 传输层（builder 模式）
+        //    baseUri 只到 host——endpoint 含完整 path+token+key，避免 resolveUri 拼接时凭据被覆盖
+        McpJsonMapper jsonMapper = new JacksonMcpJsonMapperSupplier().get();
+        HttpClientStreamableHttpTransport transport = HttpClientStreamableHttpTransport.builder(baseUri)
+                .endpoint(endpoint)
+                .jsonMapper(jsonMapper)
+                .build();
+
+        // 2. 造 McpSyncClient（builder 模式，配请求超时——与 stdio 一致）
+        McpSyncClient mcpClient = McpClient.sync(transport)
+                .requestTimeout(Duration.ofSeconds(60))
+                .build();
+
+        // 3. 与 server 握手——必须调，否则 listTools/callTool 全失败（与 stdio 一致）
         mcpClient.initialize();
         return mcpClient;
     }
@@ -209,7 +284,27 @@ public class McpAI
         System.out.println("模型回复：\n" + reply);
     }
 
-    /** 返回一个"空" ObjectProvider（沿用 HelloAI 实现） */
+    /**
+     * 场景三：验证 streamable-http 传输的远程 MCP server——让模型用钉钉 MCP 操作云文档。
+     *
+     * <p>与场景二的 stdio（Playwright）形成对称：transport 不同（HTTP vs stdio），
+     * 但模型侧的调用方式完全一样——都是 {@code .tools(weatherTools, shellTools, mcpTools)}
+     * 集中注册，模型自主路由。这正是 MCP 协议分层的好处：传输层换，上层不动。</p>
+     *
+     * <p>钉钉 MCP server 暴露的工具（列出文档、读取文档等）通过 streamable-http 远程调用，
+     * server 状态在钉钉云端——与 Playwright（子进程跑本机、操作本机浏览器）形成"远程服务 vs 本地进程"对比。</p>
+     */
+    private static void testDingtalkMcp(ChatClient chatClient, WeatherTools weatherTools,
+                                        ShellTools shellTools, SyncMcpToolCallbackProvider mcpTools)
+    {
+        System.out.println("\n===== 场景三：钉钉云文档 MCP（streamable-http 远程传输）=====");
+        String reply = chatClient.prompt()
+                .user("帮我列出钉钉云文档里的文件")
+                .tools(weatherTools, shellTools, mcpTools)   // 本地 + stdio + HTTP 集中注册
+                .call()
+                .content();
+        System.out.println("模型回复：\n" + reply);
+    }
     private static <T> ObjectProvider<T> emptyProvider()
     {
         return new ObjectProvider<T>()
