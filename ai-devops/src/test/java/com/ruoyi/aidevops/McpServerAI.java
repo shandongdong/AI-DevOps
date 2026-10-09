@@ -1,6 +1,5 @@
 package com.ruoyi.aidevops;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -51,10 +50,7 @@ public class McpServerAI
     {
         // 1. 第11篇的本地工具（天气 + Shell），@Tool 方法零改动复用
         WeatherTools weatherTools = new WeatherTools(new WeatherService(new WeatherProperties()));
-        ShellProperties shellProps = new ShellProperties();
-        shellProps.setAllowedCommands(List.of("ls", "pwd", "date", "echo", "df", "whoami"));
-        shellProps.setCommandTimeout(Duration.ofSeconds(10));
-        ShellTools shellTools = new ShellTools(new ShellExecutor(shellProps));
+        ShellTools shellTools = new ShellTools(new ShellExecutor(new ShellProperties()));
 
         // 2. 把 @Tool 方法转成 MCP 工具规格
         //    ToolCallbacks.from() 扫描 @Tool 方法包成 ToolCallback[]
@@ -79,7 +75,7 @@ public class McpServerAI
                 + McpServerAI.class.getName());
 
         // 5. 阻塞等 client（stdio server 靠 System.in/out 通信，主线程不能退出）
-        //    ⚠️ 不能用 Thread.currentThread().join()——线程 join 自己会永远阻塞
+        //    不能用 Thread.currentThread().join()——线程 join 自己会永远阻塞
         //    （join() 内部调 wait() 等自己终止，永远不会被 notify），且 Ctrl+C 进
         //    shutdown hook 后 main 线程仍卡在 join() 里下不来。改用 CountDownLatch：
         //    main 线程 await() 阻塞，shutdown hook 里 countDown() 唤醒后正常退出。
