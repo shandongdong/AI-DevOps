@@ -128,7 +128,8 @@ ai-devops:
       command-timeout: 30s
       max-output-lines: 500
       max-output-bytes: 65536
-      # 白名单：只放行只读/查看类命令，rm/mv/kill 等危险命令默认不放行
+      # 白名单：只放行只读/查看类命令，rm/mv/kill 等危险命令默认不放行。
+      # find 不放行——其 -exec/-delete 子参数是写原语，且 "find -exec cmd {} +" 语法无需分号可绕过元字符检查
       allowed-commands:
         - ls
         - cat
@@ -139,7 +140,6 @@ ai-devops:
         - head
         - tail
         - grep
-        - find
         - wc
         - whoami
         - uptime

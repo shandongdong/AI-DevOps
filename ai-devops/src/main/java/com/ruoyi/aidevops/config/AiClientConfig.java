@@ -28,8 +28,9 @@ import org.springframework.context.annotation.Primary;
  * <p>这样行为可预测，不依赖 {@code @ConditionalOnMissingBean} 的类型匹配微妙性
  * （方案 A 依赖 {@code ChatClient.Builder} vs {@code ChatClient} 类型匹配，有坑）。</p>
  *
- * <p>新增模型厂商时：在此追加一个 {@code @Bean} 方法 + 在 Controller 的 switch 路由里
- * 加一个 case 即可，无需改自动配置或抽象出 Map/策略模式（YAGNI，两个模型时字段注入更直接）。</p>
+ * <p>新增模型厂商时：在此追加一个 {@code @Bean} 方法 + 在 {@code AiModelRouter#route} 的 switch
+ * 里加一个 case（三个 AI 接口共用该路由，只改一处）即可，无需改自动配置或抽象出
+ * Map/策略模式（YAGNI，两个模型时字段注入更直接）。</p>
  *
  * @author shandongdong
  * @see ChatController 多模型路由调用方

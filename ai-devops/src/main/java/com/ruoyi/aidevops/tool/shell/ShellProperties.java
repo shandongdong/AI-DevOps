@@ -31,7 +31,8 @@ public class ShellProperties
 {
     /**
      * 命令执行的工作目录（启动时自动 mkdirs）。
-     * <p>隔离爆炸半径：命令只能在这个目录下读写，不污染系统目录。</p>
+     * <p>锚定命令的 cwd，相对路径落在此目录内、不污染系统目录。注意这只是 cwd 锚定而非沙箱——
+     * 绝对路径不受限，真正的边界靠 {@link #allowedCommands} 只放行只读命令来约束。</p>
      */
     private String workspaceRoot = System.getProperty("java.io.tmpdir") + "/ai-devops-shell";
 
@@ -46,12 +47,13 @@ public class ShellProperties
 
     /**
      * 允许执行的命令白名单（按命令首个 token 匹配，如 {@code ls -la} 校验 {@code ls}）。
-     * <p>默认只放行只读/查看类命令。{@code rm}/{@code mv}/{@code kill} 等危险命令默认不放行。
-     * 生产环境应按实际需要收紧或扩展。</p>
+     * <p>默认只放行只读/查看类命令。{@code rm}/{@code mv}/{@code kill} 等危险命令默认不放行；
+     * <b>find 也不放行</b>——它的 {@code -exec}/{@code -delete} 子参数是写原语，
+     * 且 {@code find ... -exec cmd {} +} 语法无需分号等元字符，可绕过元字符检查。</p>
      */
     private List<String> allowedCommands = Arrays.asList(
             "ls", "cat", "pwd", "date", "df", "echo",
-            "head", "tail", "grep", "find", "wc",
+            "head", "tail", "grep", "wc",
             "whoami", "uptime", "free");
 
     public String getWorkspaceRoot()

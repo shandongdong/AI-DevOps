@@ -39,7 +39,7 @@ public class ShellTools
      * @return 命令输出 + 退出码 + 状态提示
      */
     @Tool(description = "在服务器上执行 shell 命令并返回输出。当需要查看文件、查看磁盘、查看系统信息时调用。"
-            + "仅支持白名单内的只读命令（如 ls/cat/pwd/date/df/echo/grep/find），不支持管道和重定向。")
+            + "仅支持白名单内的只读命令（如 ls/cat/pwd/date/df/echo/grep），不支持管道和重定向。")
     public String executeCommand(@ToolParam(description = "要执行的 shell 命令，如 ls、df -h、cat filename") String command)
     {
         log.info("模型请求执行命令: {}", command);

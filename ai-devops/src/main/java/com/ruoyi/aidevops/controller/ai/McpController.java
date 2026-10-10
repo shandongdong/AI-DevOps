@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,8 @@ import com.ruoyi.common.core.domain.AjaxResult;
  *       钉钉云文档工具等）。这是 MCP 的核心便利——配 yml 就有工具，不用自己写</li>
  * </ul>
  *
- * <p>本地工具与 MCP 工具<b>并存注册</b>：{@code .tools(weatherTools, shellTools, mcpToolCallbackProvider)}。
+ * <p>本地工具与 MCP 工具<b>并存注册</b>：{@code .tools(weatherTools, shellTools)} +
+ * {@code .toolCallbacks(mcpTools)}（{@link #mcpToolCallbacksWithFallback()} 获取，缓存 + 失败降级）。
  * 模型自主路由全部工具——问天气调本地 getWeather，问网页操作调 Playwright browser_* 工具，
  * 路由决策权全在模型。呼应第11篇 6.2 集中注册最佳实践。</p>
  *
@@ -42,15 +44,13 @@ import com.ruoyi.common.core.domain.AjaxResult;
  *
  * @author shandongdong
  * @see AIToolController 第11篇自写工具接口（本接口在其基础上加 MCP 工具）
+ * @see AiModelRouter 共用的模型路由器
  */
 @RestController
 @RequestMapping("/aidevops/ai")
 public class McpController
 {
     private static final Logger log = LoggerFactory.getLogger(McpController.class);
-
-    /** 默认模型标识，未传 model 参数时走它 */
-    private static final String DEFAULT_MODEL = "anthropic";
 
     private final ChatClient anthropicChatClient;
     private final ChatClient deepSeekChatClient;
@@ -66,6 +66,15 @@ public class McpController
      * 直接注入用即可——这是 MCP 的核心便利，配 yml 就有工具。</p>
      */
     private final ToolCallbackProvider mcpToolCallbackProvider;
+
+    /**
+     * MCP 工具回调缓存（成功一次后复用）。
+     *
+     * <p>Spring AI 每次请求都会调 {@code ToolCallbackProvider.getToolCallbacks()}，对每个外部
+     * MCP server 发 listTools 远程调用。工具列表极少变化，缓存后免去每请求的远程往返；
+     * 拉取失败时降级（见 {@link #mcpToolCallbacksWithFallback()}），成功前每次请求自动重试。</p>
+     */
+    private volatile ToolCallback[] cachedMcpToolCallbacks;
 
     public McpController(@Qualifier("anthropicChatClient") ChatClient anthropicChatClient,
                          @Qualifier("deepSeekChatClient") ChatClient deepSeekChatClient,
@@ -88,8 +97,8 @@ public class McpController
     /**
      * MCP 工具调用接口：接收用户消息，注入本地工具 + MCP 工具，返回模型回复。
      *
-     * <p>与 {@link AIToolController#tool} 的区别：调用链多了 {@code mcpToolCallbackProvider}——
-     * {@code .tools(weatherTools, shellTools, mcpToolCallbackProvider)}。
+     * <p>与 {@link AIToolController#tool} 的区别：调用链多了 MCP 工具——
+     * {@code .tools(weatherTools, shellTools)} + {@code .toolCallbacks(mcpTools)}。
      * 模型据此决定调本地工具还是 MCP 工具——问天气调本地 getWeather，
      * 问网页操作调 Playwright browser_navigate + browser_take_screenshot，
      * 路由决策权在模型。</p>
@@ -109,26 +118,18 @@ public class McpController
         }
         try
         {
-            String resolvedModel = (model == null || model.isBlank())
-                    ? DEFAULT_MODEL : model.toLowerCase();
-            ChatClient client = switch (resolvedModel)
-            {
-                case "anthropic" -> anthropicChatClient;
-                case "deepseek" -> deepSeekChatClient;
-                default -> throw new IllegalArgumentException(
-                        "不支持的模型: " + model + "，支持: anthropic, deepseek");
-            };
+            AiModelRouter.Resolved routed = AiModelRouter.route(model, anthropicChatClient, deepSeekChatClient);
             // 本地工具 + MCP 工具并存注册，模型自主路由全部工具
-            // mcpToolCallbackProvider.getToolCallbacks() 返回所有 MCP server 工具（Playwright browser_*、钉钉文档等）
-            String reply = client.prompt()
+            String reply = routed.client().prompt()
                     .user(request.message())
-                    .tools(weatherTools, shellTools, mcpToolCallbackProvider)
+                    .tools(weatherTools, shellTools)
+                    .toolCallbacks(mcpToolCallbacksWithFallback())
                     .call()
                     .content();
             // Map.of 不接受 null value：模型无回复时 .content() 返回 null，直接 Map.of 会 NPE，故判空兜底
             Map<String, Object> data = new HashMap<>();
             data.put("reply", reply == null ? "" : reply);
-            data.put("model", resolvedModel);
+            data.put("model", routed.model());
             return AjaxResult.success(data);
         }
         catch (Exception e)
@@ -137,6 +138,36 @@ public class McpController
             // （如"Client failed to initialize listing tools"只说"列表工具失败"，不说是哪个 client、什么错）
             log.error("[MCP] 工具调用失败，完整异常栈：", e);
             return AjaxResult.error("MCP 工具调用失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取 MCP 工具回调（缓存 + 降级）。
+     *
+     * <p>不做缓存/降级时，任一外部 MCP server 不可用（如钉钉凭据缺失、网络不通）会让
+     * {@code getToolCallbacks()} 整体抛异常——本地工具和其余 server 的工具一并不可用。
+     * 此处成功一次后缓存复用（工具列表极少变化）；失败降级为空数组，本次请求仅损失
+     * 外部 MCP 工具，本地工具照常可用，且下次请求会自动重试拉取。</p>
+     *
+     * @return MCP server 的全部工具回调；拉取失败时返回空数组（降级）
+     */
+    private ToolCallback[] mcpToolCallbacksWithFallback()
+    {
+        ToolCallback[] cached = cachedMcpToolCallbacks;
+        if (cached != null)
+        {
+            return cached;
+        }
+        try
+        {
+            cached = mcpToolCallbackProvider.getToolCallbacks();
+            cachedMcpToolCallbacks = cached;
+            return cached;
+        }
+        catch (Exception e)
+        {
+            log.warn("[MCP] 外部 MCP server 工具列表获取失败，本次请求降级为仅本地工具：{}", e.getMessage());
+            return new ToolCallback[0];
         }
     }
 }

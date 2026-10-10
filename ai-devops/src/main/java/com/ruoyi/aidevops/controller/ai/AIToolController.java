@@ -1,7 +1,10 @@
 package com.ruoyi.aidevops.controller.ai;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,13 +24,15 @@ import com.ruoyi.common.core.domain.AjaxResult;
  * <p>承接 {@link ChatController}（第10篇，纯对话），本接口在第10篇基础上加 {@code .tools()} 注入工具，
  * 让模型从"动嘴"升级到"动手"——能自己决定调天气查询或 Shell 命令执行工具，拿到结果再回复。</p>
  *
- * <p>路由风格与 {@link ChatController} 一致：按 {@code model} 参数切换 ChatClient，默认走 Anthropic。
- * 工具对象（{@link WeatherTools} / {@link ShellTools}）由容器注入，每个请求都注入同一组工具。</p>
+ * <p>路由风格与 {@link ChatController} 一致：按 {@code model} 参数切换 ChatClient，默认走 Anthropic，
+ * 路由逻辑由 {@link AiModelRouter} 统一处理。工具对象（{@link WeatherTools} / {@link ShellTools}）
+ * 由容器注入，每个请求都注入同一组工具。</p>
  *
  * <p>权限：验证阶段标 {@code @Anonymous} 免登录，后续接入业务移除并配 {@code @PreAuthorize}。</p>
  *
  * @author shandongdong
  * @see ChatController 第10篇纯对话接口（本接口在其基础上加工具）
+ * @see AiModelRouter 共用的模型路由器
  * @see WeatherTools 天气查询工具
  * @see ShellTools Shell 命令执行工具
  */
@@ -35,8 +40,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 @RequestMapping("/aidevops/ai")
 public class AIToolController
 {
-    /** 默认模型标识，未传 model 参数时走它 */
-    private static final String DEFAULT_MODEL = "anthropic";
+    private static final Logger log = LoggerFactory.getLogger(AIToolController.class);
 
     private final ChatClient anthropicChatClient;
     private final ChatClient deepSeekChatClient;
@@ -76,25 +80,23 @@ public class AIToolController
         }
         try
         {
-            String resolvedModel = (model == null || model.isBlank())
-                    ? DEFAULT_MODEL : model.toLowerCase();
-            ChatClient client = switch (resolvedModel)
-            {
-                case "anthropic" -> anthropicChatClient;
-                case "deepseek" -> deepSeekChatClient;
-                default -> throw new IllegalArgumentException(
-                        "不支持的模型: " + model + "，支持: anthropic, deepseek");
-            };
+            AiModelRouter.Resolved routed = AiModelRouter.route(model, anthropicChatClient, deepSeekChatClient);
             // 与 ChatController 的唯一区别：注入工具，让模型能"动手"
-            String reply = client.prompt()
+            String reply = routed.client().prompt()
                     .user(request.message())
                     .tools(weatherTools, shellTools)
                     .call()
                     .content();
-            return AjaxResult.success(Map.of("reply", reply, "model", resolvedModel));
+            // Map.of 不接受 null value：模型无回复时 .content() 返回 null，直接 Map.of 会 NPE，故判空兜底
+            Map<String, Object> data = new HashMap<>();
+            data.put("reply", reply == null ? "" : reply);
+            data.put("model", routed.model());
+            return AjaxResult.success(data);
         }
         catch (Exception e)
         {
+            // 完整异常栈进日志（e.getMessage() 可能为 null，如 NPE，仅靠响应信息无法排障）
+            log.error("[tool] 工具调用失败 model={}", model, e);
             return AjaxResult.error("工具调用失败：" + e.getMessage());
         }
     }

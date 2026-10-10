@@ -23,6 +23,7 @@ public class CalcHistoryServiceImpl implements ICalcHistoryService
 
     /**
      * 四则运算并落库
+     * 入参缺失抛 ServiceException 业务提示（防 switch(null)/拆箱 NPE 裸 500），
      * 除数为 0 抛 ServiceException 不落库（AC-1.3），合法运算写入历史表
      *
      * @param operator      运算符
@@ -34,6 +35,11 @@ public class CalcHistoryServiceImpl implements ICalcHistoryService
     @Transactional
     public CalcHistoryEntity compute(String operator, Double firstNumber, Double secondNumber)
     {
+        // 入口校验：operator 为 null 时 switch 直接 NPE，first/second 为 null 时拆箱 NPE
+        if (operator == null || firstNumber == null || secondNumber == null)
+        {
+            throw new ServiceException("运算符与两个操作数均不能为空");
+        }
         double result;
         switch (operator)
         {

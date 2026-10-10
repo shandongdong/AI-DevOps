@@ -1,22 +1,28 @@
 package com.ruoyi.aidevops.controller.ai;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.ruoyi.common.annotation.Anonymous;
 import com.ruoyi.common.core.domain.AjaxResult;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * ai-devops AI 对话接口（多模型路由）
  *
  * <p>支持在同一接口下按 {@code model} 参数切换不同大模型厂商，默认走 Anthropic。
  * 各模型的 {@link ChatClient} bean 由 {@link com.ruoyi.aidevops.config.AiClientConfig} 统一管理，
- * 本 Controller 持有两个带 {@code @Qualifier} 的 {@link ChatClient} 字段，按 model 参数路由。</p>
+ * 本 Controller 持有两个带 {@code @Qualifier} 的 {@link ChatClient} 字段，
+ * 路由逻辑由 {@link AiModelRouter} 统一处理（与 AIToolController/McpController 共用）。</p>
  *
  * <p>当前支持：</p>
  * <ul>
@@ -29,13 +35,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
  *
  * @author shandongdong
  * @see com.ruoyi.aidevops.config.AiClientConfig 多模型 ChatClient bean 定义
+ * @see AiModelRouter 共用的模型路由器
  */
 @RestController
 @RequestMapping("/aidevops/ai")
 public class ChatController
 {
-    /** 默认模型标识，未传 model 参数时走它 */
-    private static final String DEFAULT_MODEL = "anthropic";
+    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     private final ChatClient anthropicChatClient;
     private final ChatClient deepSeekChatClient;
@@ -53,8 +59,8 @@ public class ChatController
      * <p>用 POST + JSON body（原则 VI：对话请求非幂等、消息体可能较长且含敏感信息，不应走 GET 路径参数）。</p>
      *
      * <p>模型路由：{@code model} 走 query param（路由元数据不属于对话内容语义，放 query 更 RESTful，
-     * {@link ChatRequest} body 无需改）。不传或传空 → 默认 {@value DEFAULT_MODEL}；
-     * 非法值 → 抛 {@link IllegalArgumentException} 被 catch 捕获，返回 error。</p>
+     * {@link ChatRequest} body 无需改）。路由逻辑见 {@link AiModelRouter#route}——
+     * 不传或传空 → 默认 anthropic；非法值 → 抛 {@link IllegalArgumentException} 被 catch 捕获，返回 error。</p>
      *
      * @param model 模型标识（query param，可选，默认 anthropic）：anthropic / deepseek
      * @param request 包含 message 字段的请求体
@@ -71,25 +77,21 @@ public class ChatController
         }
         try
         {
-            // 解析 model：空值回退默认；统一小写便于 switch 匹配
-            String resolvedModel = (model == null || model.isBlank())
-                    ? DEFAULT_MODEL : model.toLowerCase();
-            // 路由到对应 ChatClient；非法值抛异常，走下方 catch 返回 error
-            ChatClient client = switch (resolvedModel)
-            {
-                case "anthropic" -> anthropicChatClient;
-                case "deepseek" -> deepSeekChatClient;
-                default -> throw new IllegalArgumentException(
-                        "不支持的模型: " + model + "，支持: anthropic, deepseek");
-            };
-            String reply = client.prompt()
+            AiModelRouter.Resolved routed = AiModelRouter.route(model, anthropicChatClient, deepSeekChatClient);
+            String reply = routed.client().prompt()
                     .user(request.message())
                     .call()
                     .content();
-            return AjaxResult.success(Map.of("reply", reply, "model", resolvedModel));
+            // Map.of 不接受 null value：模型无回复时 .content() 返回 null，直接 Map.of 会 NPE，故判空兜底
+            Map<String, Object> data = new HashMap<>();
+            data.put("reply", reply == null ? "" : reply);
+            data.put("model", routed.model());
+            return AjaxResult.success(data);
         }
         catch (Exception e)
         {
+            // 完整异常栈进日志（e.getMessage() 可能为 null，如 NPE，仅靠响应信息无法排障）
+            log.error("[chat] 调用大模型失败 model={}", model, e);
             return AjaxResult.error("调用大模型失败：" + e.getMessage());
         }
     }

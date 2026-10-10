@@ -1,5 +1,6 @@
 package com.ruoyi.aidevops.tool.weather;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -76,15 +77,16 @@ public class WeatherService
     @SuppressWarnings("unchecked")
     public WeatherInfo getCurrentWeather(String city)
     {
-        // 1. geocoding：城市名 → 经纬度
+        // 1. geocoding：城市名 → 经纬度（scheme/host/path 从配置 URL 解析，http 内网代理同样支持）
         Map<String, Object> geoResponse;
         try
         {
+            URI geoBase = URI.create(geocodingApiUrl);
             geoResponse = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host(extractHost(geocodingApiUrl))
-                            .path(extractPath(geocodingApiUrl))
+                            .scheme(geoBase.getScheme())
+                            .host(geoBase.getHost())
+                            .path(geoBase.getPath() == null ? "" : geoBase.getPath())
                             .queryParam("name", city)
                             .queryParam("count", 1)
                             .queryParam("language", "zh")
@@ -123,11 +125,12 @@ public class WeatherService
         Map<String, Object> forecastResponse;
         try
         {
+            URI forecastBase = URI.create(forecastApiUrl);
             forecastResponse = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host(extractHost(forecastApiUrl))
-                            .path(extractPath(forecastApiUrl))
+                            .scheme(forecastBase.getScheme())
+                            .host(forecastBase.getHost())
+                            .path(forecastBase.getPath() == null ? "" : forecastBase.getPath())
                             .queryParam("latitude", latitude)
                             .queryParam("longitude", longitude)
                             .queryParam("current", "temperature_2m,weather_code")
@@ -178,21 +181,6 @@ public class WeatherService
         factory.setConnectTimeout(timeout);
         factory.setReadTimeout(timeout);
         return factory;
-    }
-
-    /** 从完整 URL 提取 host（如 https://api.x.com/v1 → api.x.com） */
-    private static String extractHost(String url)
-    {
-        String noScheme = url.replaceFirst("^https?://", "");
-        return noScheme.split("/", 2)[0];
-    }
-
-    /** 从完整 URL 提取 path（如 https://api.x.com/v1/search → /v1/search） */
-    private static String extractPath(String url)
-    {
-        String noScheme = url.replaceFirst("^https?://", "");
-        String[] parts = noScheme.split("/", 2);
-        return parts.length > 1 ? "/" + parts[1] : "";
     }
 
     /**

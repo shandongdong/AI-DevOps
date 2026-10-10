@@ -151,4 +151,47 @@ class ShellExecutorTest
                         || result.output().contains(tempDir.getFileName().toString()),
                 "pwd 输出应指向配置的工作目录，实际: " + result.output());
     }
+
+    @Test
+    @DisplayName("find 逃逸防护：find -exec 形式被拒（find 含写原语子参数，已移出白名单）")
+    void execute_findWithExec_blocked()
+    {
+        ShellExecutor executor = new ShellExecutor(props);
+        CommandResult result = executor.execute("find / -type f -exec rm {} +");
+
+        assertTrue(result.blocked(), "find 含 -exec/-delete 写原语，不应在白名单内");
+    }
+
+    @Test
+    @DisplayName("花括号批量语法被拒：{ cmd; } 形式 → blocked=true（纵深防御）")
+    void execute_braceGroup_blocked()
+    {
+        ShellExecutor executor = new ShellExecutor(props);
+        CommandResult result = executor.execute("{ ls; }");
+
+        assertTrue(result.blocked(), "含花括号/分号的命令组应被拒");
+    }
+
+    @Test
+    @DisplayName("超大输出不死锁：输出超 OS 管道缓冲区（约64KB）→ 正常完成且截断，不误报超时")
+    void execute_outputBeyondPipeBuffer_completesWithTruncation()
+    {
+        // seq 不在默认白名单，放行用于测死锁回归；限制 100 行
+        props.setAllowedCommands(List.of("seq"));
+        props.setMaxOutputLines(100);
+        props.setMaxOutputBytes(65536);
+        ShellExecutor executor = new ShellExecutor(props);
+
+        // seq 1 200000 输出约 1.3MB，远超管道缓冲区——
+        // 旧实现（先 waitFor 后读流）会死锁到 2s 超时误报 timedOut；新实现并发读流，正常完成
+        long start = System.currentTimeMillis();
+        CommandResult result = executor.execute("seq 1 200000");
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertFalse(result.timedOut(), "输出超管道缓冲区不应死锁误报超时，实际耗时 " + elapsed + "ms");
+        assertFalse(result.blocked(), "seq 已在白名单不应被拒");
+        assertTrue(result.truncated(), "输出超过 100 行限制，truncated 应为 true");
+        assertTrue(result.output().contains("截断"), "输出应被截断并提示");
+        assertTrue(elapsed < 1500, "应在远小于超时（2s）内完成，实际 " + elapsed + "ms");
+    }
 }

@@ -60,6 +60,28 @@ class CalcHistoryServiceImplTest
     }
 
     /**
+     * 入参校验：任一参数为 null → ServiceException 业务提示（而非 NPE 裸 500），且不落库
+     */
+    @Test
+    @DisplayName("入参为 null 时抛 ServiceException 业务提示，不落库")
+    void compute_nullParams_shouldThrowServiceException()
+    {
+        // operator 为 null（原实现 switch(null) 直接 NPE）
+        ServiceException ex1 = assertThrows(ServiceException.class,
+                () -> calcHistoryService.compute(null, 6.0, 2.0));
+        assertEquals("运算符与两个操作数均不能为空", ex1.getMessage());
+
+        // 操作数为 null（原实现拆箱 NPE）
+        assertThrows(ServiceException.class,
+                () -> calcHistoryService.compute("+", null, 2.0));
+        assertThrows(ServiceException.class,
+                () -> calcHistoryService.compute("+", 6.0, null));
+
+        // 均不落库
+        verify(calcHistoryMapper, never()).insertCalcHistory(any());
+    }
+
+    /**
      * AC-1.2：减/乘/除结果正确（链式验证）
      */
     @Test
