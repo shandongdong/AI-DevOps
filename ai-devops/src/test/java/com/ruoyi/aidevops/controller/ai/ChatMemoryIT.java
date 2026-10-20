@@ -60,7 +60,7 @@ class ChatMemoryIT
     /**
      * 核心验证：同一 conversationId 的两轮对话，第二轮答出第一轮的信息。
      *
-     * <p>场景：第一轮告诉模型"我叫张三"，第二轮问"我叫什么名字"，断言回复包含"张三"。</p>
+     * <p>场景：第一轮告诉模型"我叫东东"，第二轮问"我叫什么名字"，断言回复包含"东东"。</p>
      *
      * <p>触发条件：环境变量 {@code DEEPSEEK_API_KEY} 就绪。缺失则 JUnit 跳过（SKIP）。</p>
      */
@@ -83,13 +83,13 @@ class ChatMemoryIT
 
         // 2. 第一轮：告诉模型用户名（模拟 ChatController.chat 的调用）
         String reply1 = chatClient.prompt()
-                .user("我叫张三，我住在北京")
+                .user("我叫东东，我住在杭州")
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
                 .content();
         assertNotNull(reply1, "第一轮回复不应为 null");
         assertFalse(reply1.trim().isEmpty(), "第一轮回复不应为空白");
-        System.out.println("第一轮问：我叫张三，我住在北京");
+        System.out.println("第一轮问：我叫东东，我住在杭州");
         System.out.println("第一轮答：" + reply1);
 
         // 3. 第二轮：问模型用户名（同 conversationId，记忆应生效）
@@ -103,15 +103,15 @@ class ChatMemoryIT
         System.out.println("第二轮问：我叫什么名字？");
         System.out.println("第二轮答：" + reply2);
 
-        // 4. 断言：第二轮回复包含"张三"——证明记忆生效
-        assertTrue(reply2.contains("张三"),
-                "记忆应生效——第二轮回复应包含\"张三\"，实际回复：" + reply2);
+        // 4. 断言：第二轮回复包含"东东"——证明记忆生效
+        assertTrue(reply2.contains("东东"),
+                "记忆应生效——第二轮回复应包含\"东东\"，实际回复：" + reply2);
     }
 
     /**
      * 会话隔离验证：不同 conversationId 的请求互不串扰。
      *
-     * <p>场景：会话 A 告诉模型"我叫张三"，会话 B 问"我叫什么名字"，断言会话 B 答不出"张三"。</p>
+     * <p>场景：会话 A 告诉模型"我叫东东"，会话 B 问"我叫什么名字"，断言会话 B 答不出"东东"。</p>
      */
     @Test
     @DisplayName("不同会话隔离：会话 B 答不出会话 A 的信息")
@@ -128,12 +128,12 @@ class ChatMemoryIT
 
         // 会话 A：告诉模型用户名
         String replyA = chatClient.prompt()
-                .user("我叫张三")
+                .user("我叫东东")
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, "session-a"))
                 .call()
                 .content();
         assertNotNull(replyA, "会话A回复不应为 null");
-        System.out.println("会话A问：我叫张三");
+        System.out.println("会话A问：我叫东东");
         System.out.println("会话A答：" + replyA);
 
         // 会话 B：问用户名（不同 conversationId）
@@ -146,9 +146,9 @@ class ChatMemoryIT
         System.out.println("会话B问：我叫什么名字？");
         System.out.println("会话B答：" + replyB);
 
-        // 断言：会话 B 不应包含"张三"——隔离生效
-        assertFalse(replyB.contains("张三"),
-                "会话隔离应生效——会话B回复不应包含\"张三\"，实际回复：" + replyB);
+        // 断言：会话 B 不应包含"东东"——隔离生效
+        assertFalse(replyB.contains("东东"),
+                "会话隔离应生效——会话B回复不应包含\"东东\"，实际回复：" + replyB);
     }
 
     /**

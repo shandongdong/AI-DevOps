@@ -25,7 +25,7 @@ import io.micrometer.observation.ObservationRegistry;
  *
  * <p>核心验证：</p>
  * <ol>
- *   <li>同一 conversationId 的多轮对话，模型能记住前几轮的信息（"我叫张三" → 后面答出"张三"）</li>
+ *   <li>同一 conversationId 的多轮对话，模型能记住前几轮的信息（"我叫东东" → 后面答出"东东"）</li>
  *   <li>不同 conversationId 互不串扰（换会话后答不出前一个会话的信息）</li>
  * </ol>
  *
@@ -72,17 +72,17 @@ public class MemoryAI
                 .build();
 
         System.out.println("===== 第一组：同一会话（demo-session-1），验证记忆生效 =====");
-        ask(chatClient, "demo-session-1", "我叫张三，我住在北京");
-        ask(chatClient, "demo-session-1", "我叫什么名字？");      // 应答出"张三"
-        ask(chatClient, "demo-session-1", "我住在哪里？");        // 应答出"北京"
+        ask(chatClient, "demo-session-1", "我叫东东，我住在杭州");
+        ask(chatClient, "demo-session-1", "我叫什么名字？");      // 应答出"东东"
+        ask(chatClient, "demo-session-1", "我住在哪里？");        // 应答出"杭州"
 
         System.out.println();
         System.out.println("===== 第二组：换会话（other-session），验证会话隔离 =====");
-        ask(chatClient, "other-session", "我叫什么名字？");      // 答不出（不同会话，没有张三的记忆）
+        ask(chatClient, "other-session", "我叫什么名字？");      // 答不出（不同会话，没有东东的记忆）
 
         System.out.println();
         System.out.println("===== 第三组：回到第一个会话，验证记忆还在 =====");
-        ask(chatClient, "demo-session-1", "我前面告诉过你我叫什么，再说一次？");  // 应答出"张三"
+        ask(chatClient, "demo-session-1", "我前面告诉过你我叫什么，再说一次？");  // 应答出"东东"
     }
 
     /**
