@@ -39,12 +39,12 @@ import io.micrometer.observation.ObservationRegistry;
 /**
  * Agent 反思循环链路端到端集成测试（第15篇）
  *
- * <p>目的：验证 {@link AgentController} 接口改造后的反思循环链路真正能工作——
+ * <p>目的：验证 {@link ChatController} 接口改造后的反思循环链路真正能工作——
  * 外层 {@code while} 循环驱动，模型 THINK/FINAL 判停，MAX_STEPS 兜底，带记忆 + 工具。</p>
  *
  * <p>做法：绕开 Spring 容器（不依赖应用启动、不碰数据库/Redis），手动构造带记忆 advisor + 工具的 ChatClient
- * ——与 {@link com.ruoyi.aidevops.config.AiClientConfig} 的记忆链路 + {@link AgentController#agent}
- * 的反思循环逻辑完全相同。然后模拟 {@link AgentController#agent} 的反思循环调用，断言能拿到最终答复。</p>
+ * ——与 {@link com.ruoyi.aidevops.config.AiClientConfig} 的记忆链路 + {@link ChatController#agent}
+ * 的反思循环逻辑完全相同。然后模拟 {@link ChatController#agent} 的反思循环调用，断言能拿到最终答复。</p>
  *
  * <p>与 {@link com.ruoyi.aidevops.AgentAI}（main 方法三段对比）的区别：AgentAI 是手动跑、人眼看结果的冒烟验证；
  * 本测试是 JUnit 断言、可重复跑的自动化验证。两者覆盖的反思循环链路相同，但本测试能进 CI。</p>
@@ -52,7 +52,7 @@ import io.micrometer.observation.ObservationRegistry;
  * <p>守卫：检查环境变量 {@code DEEPSEEK_API_KEY} 是否就绪，缺失则跳过（不破坏 CI）。</p>
  *
  * @author shandongdong
- * @see AgentController 接口调用方（本测试模拟其反思循环逻辑）
+ * @see ChatController 接口调用方（本测试模拟其反思循环逻辑）
  * @see com.ruoyi.aidevops.config.AiClientConfig 记忆 advisor 挂载（本测试复用其链路）
  */
 @DisplayName("Agent 反思循环链路端到端集成测试（第15篇）")
@@ -64,7 +64,7 @@ class AgentIT
     /** 记忆窗口大小（与 AiClientConfig.MEMORY_MAX_MESSAGES 一致） */
     private static final int MAX_MESSAGES = 20;
 
-    /** 外层循环最大步数兜底（与 AgentController.MAX_STEPS 一致） */
+    /** 外层循环最大步数兜底（与 ChatController.MAX_STEPS 一致） */
     private static final int MAX_STEPS = 8;
 
     /** 测试用任务（与 AgentAI.TASK 同构：需要查天气 + 查系统时间，天然要多步） */
@@ -89,7 +89,7 @@ class AgentIT
         assumeTrue(apiKey != null && !apiKey.isBlank(),
                 "未设置 " + ENV_API_KEY + "，跳过真实联网测试");
 
-        // 1. 构造带记忆 + 工具的 ChatClient（与 AgentController 注入的 ChatClient 链路相同）
+        // 1. 构造带记忆 + 工具的 ChatClient（与 ChatController 注入的 ChatClient 链路相同）
         ChatModel chatModel = createDeepSeekChatModel(apiKey);
         WeatherTools weatherTools = new WeatherTools(new WeatherService(new WeatherProperties()));
         ShellTools shellTools = new ShellTools(new ShellExecutor(new ShellProperties()));
@@ -97,7 +97,7 @@ class AgentIT
 
         String conversationId = "agent-test-session-1";
 
-        // 2. 跑外层反思循环（模拟 AgentController.agent 的核心逻辑）
+        // 2. 跑外层反思循环（模拟 ChatController.agent 的核心逻辑）
         int step = 0;
         String finalAnswer = null;
         while (step < MAX_STEPS)
