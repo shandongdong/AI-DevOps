@@ -67,6 +67,12 @@ public class McpAI
         // 钉钉 MCP 客户端（streamable-http 传输），与 Playwright 的 stdio 形成两种传输对称演示。
         // key 未设时跳过钉钉场景——读者无 key 也能跑 main 看 Playwright 链路，设了才补跑钉钉。
         McpSyncClient dingtalkMcp = null;
+        // docling MCP 客户端（stdio 传输，与 Playwright 同 transport）。文档解析工具——
+        // 场景四：连 docling-mcp server，调 convert + export_to_markdown 两步工具拿文档 Markdown。
+        // 与 Playwright 的看点不同：Playwright 是 navigate+screenshot 两步有状态操作，
+        // docling 是 convert→export 两个独立工具配合完成"文档变文本"这件事。
+        // 守卫：本地需有 uvx 命令（uv 提供，brew install uv）才起 server，否则跳过场景四。
+        McpSyncClient doclingMcp = null;
         try
         {
             playwrightMcp = createStdioMcpClient(
@@ -76,6 +82,14 @@ public class McpAI
             // 未设时跳过钉钉场景，只跑 Playwright——main 不强依赖钉钉凭据。
             String dingtalkKey = System.getenv("DINGTALK_MCP_KEY");
             boolean hasDingtalk = dingtalkKey != null && !dingtalkKey.isBlank();
+
+            // docling 场景守卫：uvx 命令在 PATH 里才起 docling-mcp server（uvx 来自 uv，brew install uv）。
+            // 没装 uv 的读者跳过场景四，不影响场景一二三——和钉钉的 hasDingtalk 同款守卫思路。
+            boolean hasDocling = isCommandAvailable("uvx");
+            if (!hasDocling)
+            {
+                System.out.println("[提示] 未找到 uvx 命令（需 brew install uv），跳过 docling 场景");
+            }
 
             // 3. 桥接：McpSyncClient → ToolCallbackProvider
             //    SyncMcpToolCallbackProvider 实现 ToolCallbackProvider，getToolCallbacks() 返回 ToolCallback[]
@@ -94,6 +108,14 @@ public class McpAI
             {
                 System.out.println("[提示] 未设 DINGTALK_MCP_KEY，跳过钉钉场景（只跑 Playwright）");
             }
+            if (hasDocling)
+            {
+                // docling-mcp server：stdio 传输，uvx 起子进程，--transport stdio 显式指定（默认是 streamable-http）
+                // 等价于 application-dev.yml 里 stdio.connections.docling 配置块
+                doclingMcp = createStdioMcpClient(
+                        "uvx", List.of("--from=docling-mcp", "docling-mcp-server", "--transport", "stdio"));
+                mcpClients.add(doclingMcp);
+            }
             SyncMcpToolCallbackProvider mcpTools = new SyncMcpToolCallbackProvider(mcpClients);
 
             // 4. 手动构造 ChatClient（DeepSeek 链路，沿用 AIToolCallingSmokeTest 套路）
@@ -107,10 +129,14 @@ public class McpAI
             {
                 testDingtalkMcp(chatClient, weatherTools, shellTools, mcpTools);
             }
+            if (hasDocling)
+            {
+                testDoclingMcp(chatClient, weatherTools, shellTools, mcpTools);
+            }
         }
         finally
         {
-            // McpSyncClient 实现了 AutoCloseable，用完必须 close——否则子进程（npx）会残留。
+            // McpSyncClient 实现了 AutoCloseable，用完必须 close——否则子进程（npx/uvx）会残留。
             // 判空 close：createStdioMcpClient 抛异常时 playwrightMcp 仍为 null，直接 close 会 NPE。
             if (playwrightMcp != null)
             {
@@ -120,6 +146,11 @@ public class McpAI
             if (dingtalkMcp != null)
             {
                 dingtalkMcp.close();
+            }
+            // docling 是 stdio 子进程（uvx 起），close 杀子进程释放资源。同样判空——uvx 未装或握手失败时不 close。
+            if (doclingMcp != null)
+            {
+                doclingMcp.close();
             }
         }
 
@@ -305,6 +336,57 @@ public class McpAI
                 .content();
         System.out.println("模型回复：\n" + reply);
     }
+
+    /**
+     * 场景四：验证 docling MCP——连 docling-mcp server，让模型调文档解析工具拿文档 Markdown。
+     *
+     * <p>docling-mcp 是文档解析工具（PDF/DOCX/HTML/图片 → DoclingDocument），暴露成 MCP server 后，
+     * 模型能自主调用它的工具。和场景二 Playwright 同是 stdio 传输，但看点不同：</p>
+     * <ul>
+     *   <li>Playwright：navigate + screenshot 两步有状态操作（浏览器会话跨调用保持）</li>
+     *   <li>docling：convert + export_to_markdown 两个独立工具配合完成"文档变文本"——
+     *       convert 解析文档返回 document_key（存 server 本地缓存），export 用 key 换 Markdown。
+     *       中间的 document_key 是 server 内部状态，模型得自己记着用它调下一个工具。</li>
+     * </ul>
+     *
+     * <p>实跑需 docling-mcp 装好 local 转换依赖（{@code uvx --from=docling-mcp[local] docling-mcp-server}，
+     * 含 torch/transformers，model 文件 GB 级）或配置 remote 转换服务（{@code DOCLING_MCP_SERVICE_URL}）。
+     * 本场景给一个文档 URL 让模型自主决定调 convert → export 拿 Markdown，再基于内容回答。</p>
+     */
+    private static void testDoclingMcp(ChatClient chatClient, WeatherTools weatherTools,
+                                       ShellTools shellTools, SyncMcpToolCallbackProvider mcpTools)
+    {
+        System.out.println("\n===== 场景四：docling MCP 文档解析（stdio 传输）=====");
+        String reply = chatClient.prompt()
+                .user("帮我解析这个 PDF 文档的内容：https://arxiv.org/pdf/2408.15298 ，"
+                        + "先解析转成文档，再导出成 Markdown，最后用一句话总结这篇文档讲的是什么")
+                .tools(weatherTools, shellTools, mcpTools)   // 本地 + 多路 MCP 集中注册
+                .call()
+                .content();
+        System.out.println("模型回复：\n" + reply);
+    }
+
+    /**
+     * 检查某个命令是否在 PATH 里可用——场景守卫用（如 uvx 未装时跳过 docling 场景）。
+     *
+     * <p>用 {@code which}（macOS/Linux）检测，命令存在返回 true。不实际执行命令，只查存在性。</p>
+     */
+    private static boolean isCommandAvailable(String command)
+    {
+        try
+        {
+            Process which = new ProcessBuilder("which", command)
+                    .redirectErrorStream(true)
+                    .start();
+            int code = which.waitFor();
+            return code == 0;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
     private static <T> ObjectProvider<T> emptyProvider()
     {
         return new ObjectProvider<T>()

@@ -81,6 +81,19 @@ spring:
               command: npx
               args:
                 - "@playwright/mcp@latest"
+            # docling MCP：文档解析（PDF/DOCX/HTML/图片 → DoclingDocument → Markdown）。
+            # uvx 起 server 子进程（uvx 来自 uv，brew install uv），--transport stdio 显式指定（默认 streamable-http）。
+            # 实跑转换文档需装 local 依赖（uvx --from=docling-mcp[local]）或配 remote 服务（DOCLING_MCP_SERVICE_URL），
+            # 否则 convert_document 工具会失败（不影响应用启动，工具调用时才握手失败）。initialized:false 守住应用不崩。
+            # ⚠️ 需 uvx 可用（PATH 里有 uvx）才连得上，没装 uv 的环境这条 connection 握手失败——
+            # 依赖上面 initialized:false，失败只影响 docling 工具调用，不崩应用。
+            docling:
+              command: uvx
+              args:
+                - "--from=docling-mcp"
+                - "docling-mcp-server"
+                - "--transport"
+                - "stdio"
         # streamable-http 传输：连远程 MCP server（HTTP）。
         # 钉钉云文档 MCP：操作文档，凭据 key 走环境变量 DINGTALK_MCP_KEY（绝不入库）
         streamable-http:
