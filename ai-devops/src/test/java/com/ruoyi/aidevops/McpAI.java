@@ -357,9 +357,11 @@ public class McpAI
                                        ShellTools shellTools, SyncMcpToolCallbackProvider mcpTools)
     {
         System.out.println("\n===== 场景四：docling MCP 文档解析（stdio 传输）=====");
+        // 注意：本环境未装文档解析模型（需 docling-mcp[local] 或配 remote 服务），
+        // convert_document 调用必然失败。所以这里只验证"能否列出 docling 的可用工具"，
+        // 不让模型去调注定失败的转换工具——提示词只问工具列表，不提解析文档。
         String reply = chatClient.prompt()
-                .user("帮我解析这个 PDF 文档的内容：https://www.rfc-editor.org/rfc/rfc2616.pdf ，"
-                        + "先解析转成文档，再导出成 Markdown，最后用一句话总结这篇文档讲的是什么")
+                .user("你当前连接了哪些文档解析相关的工具？请列出工具名称和用途，不需要调用任何工具。")
                 .tools(weatherTools, shellTools, mcpTools)   // 本地 + 多路 MCP 集中注册
                 .call()
                 .content();
