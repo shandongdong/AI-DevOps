@@ -358,7 +358,7 @@ public class McpAI
     {
         System.out.println("\n===== 场景四：docling MCP 文档解析（stdio 传输）=====");
         String reply = chatClient.prompt()
-                .user("帮我解析这个 PDF 文档的内容：https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf ，"
+                .user("帮我解析这个 PDF 文档的内容：https://www.rfc-editor.org/rfc/rfc2616.pdf ，"
                         + "先解析转成文档，再导出成 Markdown，最后用一句话总结这篇文档讲的是什么")
                 .tools(weatherTools, shellTools, mcpTools)   // 本地 + 多路 MCP 集中注册
                 .call()
