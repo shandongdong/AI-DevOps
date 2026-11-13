@@ -18,10 +18,11 @@ specs/
     ├── data-model.md     # 数据模型（可选，plan 阶段产出）
     ├── contracts/        # API 契约（可选，plan 阶段产出）
     ├── quickstart.md     # 验证场景（可选，plan 阶段产出）
+    ├── prototype/        # 前端高保真原型（可选，涉及新页面开发时 plan 阶段产出）
     └── implementation-details/  # 细节算法/代码片段（可选）
 ```
 
-> 说明：`research.md` / `data-model.md` / `contracts/` / `quickstart.md` 是 plan 阶段按需产出的可选文件，简单功能（如本目录的 001 健康检查）不需要全部生成。是否使用 `specify` CLI 不影响这些路径约定——CLI 只是自动填充，手写同样遵循此结构。
+> 说明：`research.md` / `data-model.md` / `contracts/` / `quickstart.md` 是 plan 阶段按需产出的可选文件，简单功能（如本目录的 001 健康检查）不需要全部生成。`prototype/` 存放功能专属的前端高保真原型（自包含静态 HTML，模拟数据体现业务口径）：当需求涉及**新页面开发**（新增页面或重大交互改造）时，plan 定稿后应主动引导用户生成，用于拆任务前确认交互设计；仅加按钮/小改动不生成。跨功能复用的参考模板放 `docs/hifi-prototypes/`，不放这里。是否使用 `specify` CLI 不影响这些路径约定——CLI 只是自动填充，手写同样遵循此结构。
 
 ## 命名约定
 
@@ -41,6 +42,9 @@ constitution（一次，长期不变，位于 memory/）
       │
       ▼
    plan           /翻译成架构 + 对照 constitution 合规（Constitution Check）
+      │
+      ▼
+  prototype       /前端高保真原型（可选：涉及新页面开发时，拆任务前确认交互需求）
       │
       ▼
   tasks           /拆任务，标 [P] 并行

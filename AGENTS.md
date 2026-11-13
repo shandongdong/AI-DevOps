@@ -20,6 +20,8 @@ AI-DevOps —— 基于若依（RuoYi-Vue 3.9.2）二次开发 + SDD（Spec-Driv
 
 SDD 命令已落地为 Claude Code skill，见 `.claude/skills/speckit-*/SKILL.md`。命令入口即 `/speckit-specify` 等。产物落在 `specs/NNN-slug/`（NNN 扫现有目录递增、零填充 3 位），命名约定见 `specs/README.md`。样板见 `specs/001-health-check/`。
 
+**前端高保真原型（条件环节）**：plan 定稿后，若需求涉及**新页面开发**（新增前端页面或重大交互改造），必须主动引导用户生成前端静态原型，落在 `specs/NNN-slug/prototype/`，在拆任务前用原型确认交互设计——交互原型属于需求的一部分，先看效果可避免实现后返工。仅给既有页面加按钮/小改动**不触发**此环节。`docs/hifi-prototypes/` 存放跨功能复用的参考模板，与业务原型区分。
+
 ## 必读基线
 
 动手前**必须读** `memory/constitution.md`（v1.1.0，治理宪法，凌驾于所有实践之上）。它定义了六条原则与凭据治理：

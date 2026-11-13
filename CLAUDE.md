@@ -38,6 +38,8 @@ AI-DevOps — 基于若依（RuoYi-Vue）3.9.2 二次开发的前后端项目，
 | SDD 索引 | `specs/README.md`         | 规范驱动开发目录用法与命名约定                       |
 | 部署     | `docs/deploy/`            | 多环境部署文档、Nginx 配置、备份脚本（已落地）      |
 | 工具     | `docs/tools/`             | 工具脚本说明（规划中）                           |
+| 高保真原型（参考模板） | `docs/hifi-prototypes/` | 跨功能复用的前端界面参考原型（如标准 CRUD 模板），开发新模块时必须参考 |
+| 业务高保真原型 | `specs/NNN-slug/prototype/` | 功能专属交互原型，跟随 SDD 产物；plan 阶段涉及新页面开发时主动引导生成，用于辅助确认需求 |
 
 ## 关键约定
 
